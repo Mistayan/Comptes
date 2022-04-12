@@ -1,0 +1,18 @@
+[{
+  "nom": "Julie Bois",
+  "type_compte": "Courant",
+  "autorisation": 50,
+  "agios": 5,
+  "solde": 200,
+  "num_compte": "1234567890",
+  "code": "c435a71fd7cf060aa72c4d4835581ac4",
+  "monnaie": "E"
+},{
+"nom": "Julie Bois",
+"type_compte": "Epargne",
+"interets": 50,
+"solde": 200,
+"num_compte": "1234567891",
+"code": "c435a71fd7cf060aa72c4d4835581ac4",
+"monnaie": "E"
+}]
