@@ -1,149 +1,199 @@
-#!-- coding:utf-8 --!#
+#!-- encoding:latin-1 --!#
 
 ##########################################  IMPORTS  #####################################################
-
-import Generators.Generateurs as Gen
-import Verifications.Base as Secu
-from string import digits as DIGITS
-from string import hexdigits as HEXADECIMAL
-from Verifications.ErrorsHandling import *
-
+from _md5 import md5
+from abc import ABCMeta, abstractmethod
+from imports import *
+import Messages.Static_strings as Message
 ##########################################  Globales  #####################################################
 
+global DEBUG
 
-"fonctionnalitÃ©s"
+
 ##########################################  Definition classe  #####################################################
 
 
-class Compte(object):
-    """CrÃ©er un compte de base.\n
+class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abstractmethod
+    """Un compte de base. Ne peut être instancié. (ABC)\n
     Aucun argument n'est obligatoire
 
     :nom\n
-    Si aucun nom n'est donnÃ©, l'application accepte l'anonymat.
-    Pour des raisons Ã©thiques, sera cependant obligatoire pour un compte courant.\n
+    Si aucun nom n'est donné, l'application accepte l'anonymat.
+    Pour des raisons éthiques, sera cependant obligatoire pour un compte courant.\n
 
     :num_compte\n
-    Si un numÃ©ro de compte est donnÃ©, on s'assurera qu'il corresponde au format lÃ©gal, et qu'il n'existe pas dÃ©jÃ .
-    Si le numÃ©ro de compte donnÃ© existe, on chargera le compte dans l'interface.
-    Si aucun numÃ©ro de compte n'est renseignÃ© (nouveau client), on en gÃ©nÃ¨rera un (qui n'existe pas encore).
+    Si un numéro de compte est donné, on s'assurera qu'il corresponde au format légal, et qu'il n'existe pas déjà.
+    Si le numéro de compte donné existe, on chargera le compte dans l'interface.
+    Si aucun numéro de compte n'est renseigné (nouveau client), on en génèrera un (qui n'existe pas encore).
 
     :solde_initial\n
-    Si aucune valeur ou une valeur erronÃ©e est renseignÃ©e, initialise Ã  0.
-    Si une valeur est renseignÃ©e, on initialisera Ã  cette valeur.
+    Si aucune valeur ou une valeur erronée est renseignée, initialise à 0.
+    Si une valeur est renseignée, on initialisera à cette valeur.
 
     :code\n
-    Parce que nous ferions tout pour nos clients, on laisse la possibilitÃ© d'avoir une protection forte
-    Si aucun argument n'est renseignÃ©, gÃ©nÃ¨re un code
+    Parce que nous ferions tout pour nos clients, on laisse la possibilité d'avoir une protection forte
+    Si aucun argument n'est renseigné, génère un code
 
     :extra_secu\n
-    Parce que la sÃ©curitÃ© est importante pour nos clients, nous leur proposons une offre de sÃ©curitÃ© renforcÃ©e.
-    Si activÃ©, le code de compte sera en HEXADECIMAL d'une longueur de 6
+    Parce que la sécurité est importante pour nos clients, nous leur proposons une offre de sécurité renforcée.
+    Si activé, le code de compte sera en HEXADECIMAL d'une longueur de 6
     """
+
     nom_proprietaire: str
     monnaie: str
-    _numero_compte: str = None  # On initialise Ã  None, au cas oÃ¹ le num_compte fournit est invalide.
+    _numero_compte: str = None  # On initialise à None, au cas où le num_compte fournit est invalide, ou déjà pris.
     _solde: float
     __code: str
 
-    def __init__(self, nom: str = None, num_compte: str = 'None',
+    @abstractmethod  # NON, pas le droit d'appeler Compte seul ! CompteXxxxxx obligatoire
+    def __init__(self, nom: str = None, num_compte: str = None,
                  solde_initial: int = 0, code: str = '', extra_secu: bool = False,
-                 monnaie: str = "â‚¬", **extra):
-        super().__init__()  # On initialise la classe objet... mÃªme si Ã§a sert Ã  rien dans ce cas-lÃ .
+                 monnaie: str = u"\x24", **extra):
+        super().__init__()  # On initialise la classe 'racine'... même si ça sert à rien dans ce cas-là.
 
-        # Initialisation des variables publiques
+        ################################### Initialisation des variables publiques ##################################
         self.monnaie = monnaie
         self.nom_proprietaire = "Anonymous" if nom is None else nom
 
-        # Initialisation des variables privÃ©es
+        ################################### Initialisation des variables privées ##################################
         self._solde = solde_initial if solde_initial >= 0 else 0
 
         while self._numero_compte is None:
             un_num = Secu.Verif.dispo(compte=num_compte)
             if un_num is False or type(un_num) is str:
-                num_compte = Gen.random_string(longueur=10, style=DIGITS)
+                num_compte = Gen.chaine_aleatoire(longueur=10, style=Message.DIGITS)
             else:
                 self._numero_compte = num_compte
 
-        # Initialisation des variables protÃ©gÃ©es
+        ################################### Initialisation des variables protégées ##################################
         if extra_secu:
-            self.__code = Gen.random_string(longueur=6, style=HEXADECIMAL) if code == '' else code
+            self.__code = Gen.chaine_aleatoire(longueur=6, style=Message.HEXADECIMAL) if code == '' else code
         else:
-            self.__code = Gen.random_string(longueur=4, style=DIGITS) if code == '' else code
+            self.__code = Gen.chaine_aleatoire(longueur=4, style=Message.DIGITS)
 
-        print(f"Un compte pour {self.nom_proprietaire}, avec le nÂ° de compte: {self._numero_compte}, \
-              avec un solde initial de {self._solde}, \
-              et le code secret: {self.__code} (Retenez-le bien), vient d'etre cree.")
+        if Message.DEBUG:
+            message_nouveau_compte = f"Un compte pour {self.nom_proprietaire}," \
+                                     f" avec le n° de compte: {self._numero_compte}," \
+                                     f"avec un solde initial de {self._solde}{self.monnaie}," \
+                                     f"et le code secret: {self.__code}.\n vient d'etre créé."
+            print(message_nouveau_compte)
+        else:
+            print(f"Votre compte n°{self._numero_compte}, avec le code: {self.__code} vient d'être créé.")
+        # self._enregistrer()
 
-    ##########################################  Fonctions PrivÃ©es  #####################################################
+    ##########################################  Fonctions Privées  #####################################################
+    ##########################################  Wrappers #####################################################
 
-    ##########################################  Fonctions PartagÃ©es  ###################################################
+    def __valeurs(self, func):
+
+        def verif(num):
+            if type(num) is not (int, float):
+                Gen.fraude(self._numero_compte, str(func), str(num))
+            return func(num)
+
+        return verif
+
+    ##########################################  Fonctions Partagées  ###################################################
 
     def retrait(self, valeur: float, autorisation=0):
         """
-        Permet le retrait d'une somme demandÃ©e
-            Si une valeur non positive est rentrÃ©e (tentative de fraude), l'opÃ©ration est enregistrÃ©e dans fraudes.txt
+        Permet le retrait d'une somme demandée
+            Si une valeur non positive est rentrée (tentative de fraude), l'opération est enregistrée dans fraudes.txt
 
             Si l'utilisateur ne donne pas le bon code.... Pas de sous !
 
-            Si le solde est insuffisant, l'opÃ©ration est refusÃ©e, avec un message d'erreurâ€¯;
-            Exception faite: Si un compte courant a une autorisation adaptÃ©e.
+            Si le solde est insuffisant, l'opération est refusée, avec un message d'erreur ;
+            Exception faite : Si un compte courant a une autorisation adaptée.
         """
-        if valeur < 0:
-            Gen.fraude(self._numero_compte, "tentative_retrait")
-            raise SoldeError("impossible de retirer une valeur negative sur le compte!")
+
+        if isinstance(valeur, str):
+            return print(Message.ONLY_NUMBERS_ERROR)
+        elif valeur < 0:
+            return print(Message.SOLDE_ERROR_MSG)
         print(f"Vous souhaitez retirer: {valeur}{self.monnaie}")
-        code = input("Quel est votre code?")
-        if code != self.__code:
-            Gen.fraude(self._numero_compte, "code_invalide")
-            return print("Code Faux !")
-        self.afficherSolde()
+
+        # En mode curieux, on ne demandera pas le code, sauf si vous désactivez l'option (Messages/Static_strings.py).
+        if Message.NO_CODE:
+            pass
+        else:
+            code = input(Message.ASK_CODE)
+            if code != self.__code:
+                Gen.fraude(self._numero_compte, "code_invalide", code)
+                return print("Code Faux !")
+        # fin if DEBUG
         if self._solde + autorisation < valeur:
             return print("Solde insuffisant!")
         self._solde -= valeur
-        print(f"Un retrait de {valeur}{self.monnaie} a Ã©tÃ© effectue")
-        self.afficherSolde()
+        print(f"Un retrait de {valeur}{self.monnaie} a été effectue")
+        Gen.historique(self._numero_compte, valeur)
+        self.afficher_solde()
 
     def versement(self, valeur: float) -> None:
-        """ Permet l'ajout d'une somme demandÃ©e sur le compte
-            Si une valeur non positive est rentrÃ©e (tentative de fraude), l'opÃ©ration est enregistrÃ©e dans fraudes.txt
+        """ Permet l'ajout d'une somme demandée sur le compte
+            Si une valeur non numéraire est rentrée (tentative de fraude), l'opération est enregistrée dans fraudes.txt
 
         """
-        if valeur < 0:
+        if isinstance(valeur, str):
+            return print(Message.ONLY_NUMBERS_ERROR)
+        if type(valeur) is not (int or float):
             Gen.fraude(self._numero_compte, "versement")
-            raise ValueError("impossible de dÃ©poser une valeur negative sur le compte!")
+            return print(Message.NEGATIF_MSG)
+        valeur = abs(valeur)  # esquiver
 
-        self.afficherSolde()
         self._solde += valeur
         print(f"Un depot de {valeur}{self.monnaie} a ete effectue")
-        self.afficherSolde()
+        Gen.historique(self._numero_compte, valeur)
+        self.afficher_solde()
 
-    def afficherSolde(self) -> None:
+    def afficher_solde(self) -> None:
         """Affiche le solde actuel
         """
-        print(f"Votre solde actuel: {self._solde}{self.monnaie}")
+        print(f"Votre solde: {self._solde}{self.monnaie}")
 
-    ##########################################  Fonctions SpÃ©ciales  ####################################################
-    def _recupererCode(self) -> None:
-        """ Permet de rÃ©cupÃ©rer un code oubliÃ©
+    ##########################################  Fonctions Spéciales  #################################################
+    def _connect(self) -> bool:
         """
-        # TODO: gÃ©rer une interface externe permettant de vÃ©rifier si c'est "Manu, Le Vrai"
+        Permettra (TBD) de se connecter sur un compté déjà existant (déjà possible en interface ?)
+        """
+        # TODO fonction _connect, pour gérer l'accès à un compte utiliser mysql ?
+        pass
+
+    def _recuperer_code(self) -> None:
+        """ Permet de récupérer un code oublié
+        """
+        # TODO: gérer une interface externe permettant de vérifier si c'est "Manu, Le Vrai"
 
         print(self.__code)  # Aller, on est gentil ;)
 
-    def _enregistrer(self):
-        """ Permet la sauvegarde d'un compte, pour la persistance des donnÃ©es.
-        """
-        # TODO: faire en sorte que Ã§a marche, c'est mieux (ne fait pas grand chose... Mais au moins Ã§a plante pas !)
+    def __enregistrer(self, un_compte):  # DEPRECATED : Ne pas utiliser...
+        """ Permet la sauvegarde d'un compte, pour la persistance des données.
 
-        cpt = Secu.Verif.dispo(compte=self._numero_compte)
-        if cpt is False:
-            f = Gen.my_open("comptes.txt", 'a+')  # Ajouter le compte au fichier
-            print(f"{self.nom_proprietaire}:{self._numero_compte}:{self._solde}:{self.monnaie}:{self.__code}", file=f)
-        else:
-            f = Gen.my_open("Comptes.txt", "w+")  # Modifier
+            #format:
+            {nom:compte:solde:monnaie:code:type:arg1:arg2:pouce:arg4}
+
+        """
+        # TODO: _enregistrer : faire en sorte que les informations des enfants puissent être enregistrées.
+
+        if Secu.Verif.dispo(compte=self._numero_compte) is True:
+            with Gen.my_open("Comptes.json", "a+") as f:  # Ajouter le compte au fichier
+                to_save = str(self)
+                try:  # CompteCourant
+                    to_save += ""
+                except:
+                    pass
+
+                try:  # CompteEpargne
+                    to_save
+                except:
+                    pass
+                """# if anti-json:
+                # print(to_save, file=f)"""
+        f.close()
 
     ##########################################  Fonctions Magiques  ####################################################
+
+    ##########################################  OPERATIONS  ####################################################
+
     def __add__(self, num):
         """ Permet un versement via '+'  avec un nombre (int ou float).
         """
@@ -154,53 +204,69 @@ class Compte(object):
         """
         return self.retrait(num)
 
+    ##########################################  COMPARAISONS  ####################################################
     def __eq__(self, autre):
         """ '==' permet:
-                la comparaison de deux comptes  pour savoir si le propriÃ©taire est le mÃªme
-                la comparaison Ã  un nombre
+                la comparaison de deux comptes  pour savoir si le propriétaire est le même
+                la comparaison à un nombre
         """
-        # TODO: ajouter une sÃ©curitÃ© supplÃ©mentaire pour assignation.
+        # TODO: ajouter une sécurité supplémentaire pour assignation.
         if isinstance(autre, int) or isinstance(autre, float):
             return self._solde == autre
         elif self.nom_proprietaire == autre.nom_proprietaire:
             return True
-        raise ValueError(f"assignation de {type(autre)} Ã  {type(Compte)} impossible.\n\
-                                Compte / int / float, acceptÃ©s)")
 
-    def __gt__(self, other) -> int:  # int plus rapide que bool <- une classe en moins Ã  instancier
+        return (f"assignation de {type(autre)} à {type(Compte)} impossible.\n\
+                                Compte / int / float, acceptés)")
+
+    def __gt__(self, other) -> int:  # int plus rapide que bool <- une classe en moins à instancier
         """
         '>' permet la comparaison du solde avec un nombre (int ou float)
         """
         if isinstance(int, other) or isinstance(float, other):
             return self._solde > other
-        raise ValueError("Impossible de comparer a autre chose qu'un nombre.")
+        print("Impossible de comparer a autre chose qu'un nombre.")
 
-    def __ge__(self, other) -> int:  # int plus rapide que bool <- une classe en moins Ã  instancier
+    def __ge__(self, other) -> int:  # int plus rapide que bool <- une classe en moins à instancier
         """
         permet la comparaison via '>=' du solde avec un nombre (int ou float)
         """
         if isinstance(int, other) or isinstance(float, other):
             return self._solde > other
-        raise ValueError("Impossible de comparer a autre chose qu'un nombre.")
+        print("Impossible de comparer a autre chose qu'un nombre.")
 
-    def __lt__(self, other) -> int:  # int plus rapide que bool <- une classe en moins Ã  instancier
+    def __lt__(self, other) -> int:  # int plus rapide que bool <- une classe en moins à instancier
         """
         permet la comparaison via '<' du solde avec un nombre (int ou float)
         """
         if isinstance(int, other) or isinstance(float, other):
             return self._solde > other
-        raise ValueError("Impossible de comparer a autre chose qu'un nombre.")
+        print("Impossible de comparer a autre chose qu'un nombre.")
 
-    def __le__(self, other) -> int:  # int plus rapide que bool <- une classe en moins Ã  instancier
+    def __le__(self, other) -> int:  # int plus rapide que bool <- une classe en moins à instancier
         """
         permet la comparaison via '<=' du solde avec un nombre (int ou float)
         """
         if isinstance(int, other) or isinstance(float, other):
             return self._solde > other
-        raise ValueError("Impossible de comparer a autre chose qu'un nombre.")
+        print("Impossible de comparer a autre chose qu'un nombre.")
+
+    def __str__(self):
+        """
+        Renvoie les informations du compte en clair (sauf le mdp, qui est hashé), préformaté pour JSON,
+        dans le cadre d'une intégration future avec interfacing
+
+        remarque : Ne pas oublier de récupérer les __str__ du child pour finir la chaine. Sinon, fermer avec "}"
+        """
+        cat_string = "{\n" + \
+                     f"\"nom\":{self.nom_proprietaire},\n\"solde\":\"{self._solde}\",\n" \
+                     f"\"num_compte\":\"{self._numero_compte}\",\n" \
+                     f"\"code\":\"{md5(self.__code.encode('utf-8')).hexdigest()}\",\n\"monnaie\":\"{self.monnaie}\",\n"
+
+        # a_retourner = cat_string  ##TODO: si jamais le client ne souhaite pas le json, formatage classique x:x:x:x
+        return cat_string
 
 
+##########################################  Fonction test_module  ####################################################
 if __name__ == '__main__':
-    cpt = Compte(nom="Julie Dubois", code="0000")
-    cpt + 25
-    cpt - 24
+    print(EXECUTE)
