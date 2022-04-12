@@ -1,68 +1,97 @@
-from Compte import Compte
+#!-- coding:latin-1 --!#
+##########################################  IMPORTS  ####################################################
 
+from imports import *
+import Messages.Static_strings as Message
 
-
+##########################################  Definition Classe  ####################################################
+#
 class CompteCourant(Compte):
     """
-        CrÃ©e un compte avec des possibilitÃ©s de retraits sous le seuil de 0.0.
-        Ã€ chaque retrait, si l'utilisateur possÃ¨de un solde nÃ©gatif,
-         on apposera des frais Ã©quivalents aux taux classiques en vigueur
+        Crée un compte avec des possibilités de retraits sous le seuil de 0.0.
+        À chaque retrait, si l'utilisateur possède un solde négatif :
+         on apposera des frais équivalents aux taux classiques en vigueur (12% de la somme retirée)
 
         ARGUMENTS :
          autorisation : int/float
          interet_debiteur : int/float
          agios : int
     """
+
     _autorisation_decouvert: float
     _pourcentage_agios: float
-    __coup_de_pouce: bool=True  # On autorise un retrait Ã  dÃ©couvert par mois, sans frais. ;)
+    __coup_de_pouce: bool = True  # On autorise un retrait à découvert par mois, sans frais. ;)
 
+    #
+    ##########################################  __init__  ####################################################
     def __init__(self, autorisation: float = 50, agios: float = 12, **extra):
-        try:
+        if hasattr(extra, "nom"):
             nom = extra.get("nom")
             if nom == "" or nom == "Anonymous":
-                raise UndefinedUserError
-        except AttributeError:
-            print("ok/NOK ? ")
-            pass
+                raise UndefinedUserError(self)
 
         super().__init__(**extra)
-        self._autorisation_decouvert = autorisation
-        self._pourcentage_agios = agios / 100
-        print(f"Ce compte est de type CompteCourant, avec autorisation de dÃ©couvert de\
-                {self._autorisation_decouvert}{self.monnaie}")
+        self._autorisation_decouvert = autorisation if autorisation >= 0 else 0
+        self._pourcentage_agios = agios / 100 if agios > 5 else 5
 
+        print(f"Ce compte est de type CompteCourant, avec autorisation de découvert de"
+              f" {self._autorisation_decouvert}{self.monnaie}, "
+              f"et un taux d'intérêts de {self._pourcentage_agios}%")
+
+    #
+    ##########################################  Fonctions Normale  ####################################################
     def retrait(self, valeur: float, autorisation: int = 0):
+        """
+        Surcharge de la méthode mère pour pouvoir appliquer l'autorisation de découvert.
+         Appel ensuite la méthode de la classe mère avec les arguments supplémentaires,
+        Et enfin, nous appliquerons des agios si l'utilisateur était à 0 ou moins avant son retrait
+        (ou sa tentative de retrait).
+        """
+
         super().retrait(valeur, autorisation=self._autorisation_decouvert)
+        #  TODO : pour etre plus gentil avec nos clients, on pourrait rajouter un if ? *wink* (et donc changer docs)
+        self.appliquer_agios(self._solde)
 
-    def appliquer_agios(self):
+    def appliquer_agios(self, valeur: float):
         """
-            Montant du dÃ©couvert x durÃ©e du dÃ©couvert x taux de la banque) Ã· nombre de jours dans l'annÃ©e.
-         âœï¸ Prenons un exemple ! Pour une personne Ã  dÃ©couvert de 100 â‚¬ pendant 15 jours, Ã  un taux de 12%,
-          le calcul sera le suivant : (100 x 15 x 12 %) Ã· 365 = (1500 x 12%) Ã· 365 = 180 Ã· 365 = 0,50 â‚¬ d'agios
-          sur la pÃ©riode Ã©coulÃ©e
-
-           Si l'utilisateur effectue un retrait lors du dÃ©couvert.... Ã§a pique !
-               On lui Ã©vitera cependant les frais de retraits lors du premier Ã©vÃ¨nement qui l'aura mis en nÃ©gatif
-               (1 fois par mois)
+           Si l'utilisateur effectue un retrait lors du découvert.... ça pique !
+            L'on considèrera qu'à 0 euro, nous sommes déjà à découvert, n'ayant pas les capacités de retrait suffisantes
+               On lui évitera cependant les frais de retraits lors du premier évènement qui l'aura mis en négatif
+               (une seule fois)
+            Attention ! Hors 'coup de pouce', CHAQUE opération à-découvert appliquera des frais. [Sujet de l'exercice]
         """
-
+        # FIXME : Mauvaise valeur de retour
         if self._solde > 0:
-            return print("Rien Ã  faire. L'utilisateur est en positif")
-        if self._solde < 0 and self.__coup_de_pouce is True:  # En nÃ©gatif et Deja utilisÃ© le coup de pouce ?
+            return print(Message.POSITIF) if Message.DEBUG else None
+        if self._solde < 0 and self.__coup_de_pouce is True:  # En négatif et pas encore utilisé le coup de pouce ?
             self.__coup_de_pouce = False
-            return print("Rien Ã  faire. L'utilisateur utilise son coup de pouce")
+            return print(Message.COUP_DE_POUCE)
 
-        # Nous avons donc un dÃ©pensier .... Il va payer !
-        facturation = 0
+        # Nous avons donc un dépensier .... Il va payer !
+        facturation = valeur * (self._pourcentage_agios / 100)
+        print(f"Votre compte va être débité de {facturation}{self.monnaie},"
+              f" dans le cadre de notre politique de retraits.")
+        self._solde = self._solde + facturation
+        self.afficher_solde()
 
-        self._solde = self._solde - facturation
+    #
+    ##########################################  Fonctions Magiques  ####################################################
+
+    def __str__(self) -> str:  # Surcharge
+        """
+        Permet de renvoyer les informations du compte au format json
+        """
+        # Mais on appelle quand même maman pour la prévenir qu'on reste chez Salomé ce soir;)
+        infos_parent = super().__str__()
+        infos_enfant = f"\"autorisation\":\"{self._autorisation_decouvert}\",\n" \
+                       f"\"interets\":\"{self._pourcentage_agios}\",\n" \
+                       f"\"pouce\":\"{self.__coup_de_pouce}\")\n" \
+                       "}"
+        return infos_parent + infos_enfant
+
+##########################################  Fonction test_module  ####################################################
 
 
 if __name__ == '__main__':
-    cpt = CompteCourant(nom="Julie Blois", autorisation=50, agios=5)
-    cpt + 25
-    cpt - 25
-    cpt - 75
-    cpt - 25
+    print(Message.EXECUTE)
 
