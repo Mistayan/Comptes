@@ -1,5 +1,5 @@
-.idea
+.idea/*
 Rapports/*
 Historique/*
-venv
+venv/*
 Clients/*
