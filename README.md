@@ -2,16 +2,17 @@
 
 Il est fortement conseillé d'utiliser Main.py
 
-  Une interface vous guidera pas à pas pour la création et la gestion de vos comptes.
-  Vous pouvez utiliser des arguments pour effectuer
-  rapidement plusieurs opérations successives.
+Une interface vous guidera pas à pas pour la création et la gestion de vos comptes. Vous pouvez utiliser des arguments
+pour effectuer rapidement plusieurs opérations successives.
 
-  ###Menu principal :
+### Menu principal :
+
 Suivez les instructions et laissez-vous guider pour une experience utilisateur
 
 ### Disclaimer:
-Aucun des fichiers créé localement n'est représentatif du système réellement
-mis en place pour la gestion de la persistance des données.\
+
+Aucun des fichiers créé localement n'est représentatif du système réellement mis en place pour la gestion de la
+persistance des données.\
 Ils sont générés comme simples données éducatives.
 
 ## Sujet de l'exercice
