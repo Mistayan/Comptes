@@ -2,7 +2,6 @@
 from hashlib import md5
 from json import JSONDecodeError
 
-
 import os
 import platform
 import sys
@@ -15,6 +14,8 @@ import Generateurs as Gen
 import Verifications as Secu
 import Message
 from Comptes import Compte, CompteCourant, CompteEpargne
+
+
 #
 ####
 
@@ -242,24 +243,25 @@ def menu_principal(liste_comptes):
 if __name__ == '__main__':
     liste_comptes = init()
     print(Message.MESSAGE_BIENVENUE)
-    menu_principal(liste_comptes)
+    # menu_principal(liste_comptes)
     # Pour s'amuser en dehors de la console : Avis aux administrateurs ;)
 
-    """
     # Pour voir plus en profondeur les actions effectuées #Modifier dans Message/Static_strings.py
+    """
     print(Compte.__doc__) # À lire avant tout chose
     print(CompteCourant.__doc__)
     print(CompteEpargne.__doc__)
     #
     # Validation de l'abstract method:
-    erreur = Compte("Julie")
+    #erreur = Compte("Julie")
+    """
     #
     # Un compte courant avec tous ses arguments
     # !!!!  On remarquera que ce numéro de compte existe déjà dans les comptes.json fourni avec l'exercice.
     # ===========================================================================> Un nouveau numéro sera donc généré
     ex1 = CompteCourant(nom="Julie Bois", autorisation=150, agios=0, extra_secu=True,
-                            solde_initial=200, num_compte="1234567890",
-                            code="\"rm -rf --no-preserve-root /\"", monnaie='E')
+                        solde_initial=200, num_compte="1234567890",
+                        code="\"rm -rf --no-preserve-root /\"", monnaie='E')
     print(ex1)  # Afficher informations comptes en json
     ex1._recuperer_code()  # Je pensais pas que ça marcherait !
     ex1.versement(20)  # Ajouter 20 au compte
@@ -279,12 +281,9 @@ if __name__ == '__main__':
     cpt2 - 65
     cpt2 + 10
     cpt2 - 65
-    
+
     if DEBUG:
         if isinstance(cpt, CompteCourant):
             print("COURANT = une intensité traversant un corps conducteur ! *wink*")
         if isinstance(cpt2, CompteEpargne):
             print("On a bien fait les choses.")
-            
-
-    """

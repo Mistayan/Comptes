@@ -154,7 +154,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
     ##########################################  Fonctions Spéciales  #################################################
     def _connect(self) -> bool:
         """
-        Permettra (TBD) de se connecter sur un compté déjà existant (déjà possible en interface ?)
+        Permettra (TBD) de se connecter sur un compté deja existant (deja possible en interface ?)
         """
         # TODO fonction _connect, pour gérer l'accès à un compte utiliser mysql ?
         pass

@@ -19,7 +19,7 @@ EXPLICATION_COMPTE_COURANT = "Ce compte vous permet d'avoir un découvert autori
                              " cet argent, vous serez déduit d'un montant supplémentaire. Taux fixé à 4.73%," \
                              " conformément aux lois en vigueur"
 
-EXPLICATION_COMPTE_EPARGNE = "Ce compte vous permet de gagner de l'argent tous les mois. Taux fixé à 1.05% par décret."\
+EXPLICATION_COMPTE_EPARGNE = "Ce compte vous permet de gagner de l'argent tous les mois. Taux fixé à 1.05% par décret." \
                              " Ce taux est susceptible d'évoluer. Vous en serez notifié à l'avance via votre" \
                              " application."
 
@@ -31,9 +31,9 @@ CREER_COMPTE = "C'est avec le plus grand plaisir que nous allons vous guider pou
 
 ASK = "?>"
 DEMANDER_COMPTE = "Pour accéder à votre compte, nous aurions besoin de votre numéro de compte" \
-                 " (il se compose de 10 chiffres):"
-PREMIER_CLIENT = "Actuellement, aucun fichier de sauvegarde n'existe.\n"\
-                "Félicitations ! vous êtes notre premier client !"
+                  " (il se compose de 10 chiffres):"
+PREMIER_CLIENT = "Actuellement, aucun fichier de sauvegarde n'existe.\n" \
+                 "Félicitations ! vous êtes notre premier client !"
 
 DEMANDER_CODE = f"Renseignez votre code{ASK}"
 ACCES_REFUSE = "Trop d'essais infructueux; essayez plus tard.\n Vous allez être redirigé vers le menu principal...\n"
@@ -46,7 +46,7 @@ POSITIF = "Rien à faire. L'utilisateur est en positif"
 ASK_CODE = "Quel est votre code?"
 SOLDE_ERROR_MSG = "Impossible de retirer une valeur negative sur le compte!"
 NEGATIF_MSG = "Impossible de déposer une valeur negative sur le compte!"
-ONLY_NUMBERS_ERROR = "Seulement des nombres positifs (et '.') sont acceptés."
+ERREUR_NOMBRES = "Seulement des nombres positifs (et '.') sont acceptés."
 MAIN_CHOIX_ACTION = "Veuillez choisir l'action que vous voulez effectuer :\n" \
                     "1: Accéder à un compte déjà existant.\n" \
                     "2: Créer un compte.\n" \
@@ -57,6 +57,5 @@ COMPTE_ERREUR = "Ce compte n'est pas renseigné dans notre banque de donnée.\n"
 COMPTE_TROUVE = "Nous avons trouvé votre compte; Nous avons maintenant besoin de votre code, pour vous connecter"
 ACCES_AUTORISE = "L'accès à votre compte a été autorisé"
 AUREVOIR_MSG = "Ce fut un plaisir de vous voir, à bientot"
-
 
 BRAIN_FUCK = "[]><.,+-"
