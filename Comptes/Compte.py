@@ -3,12 +3,13 @@
 ##########################################  IMPORTS  #####################################################
 from _md5 import md5
 from abc import ABCMeta, abstractmethod
-from imports import *
-import Messages.Static_strings as Message
+import Message.Static_strings as Message
+import Generateurs as Generer
+import Verifications as Securite
+from logging import debug, info, warning, error, basicConfig
+
+
 ##########################################  Globales  #####################################################
-
-global DEBUG
-
 
 ##########################################  Definition classe  #####################################################
 
@@ -48,8 +49,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
     @abstractmethod  # NON, pas le droit d'appeler Compte seul ! CompteXxxxxx obligatoire
     def __init__(self, nom: str = None, num_compte: str = None,
                  solde_initial: int = 0, code: str = '', extra_secu: bool = False,
-                 monnaie: str = u"\x24", **extra):
-        super().__init__()  # On initialise la classe 'racine'... même si ça sert à rien dans ce cas-là.
+                 monnaie: str = u"\x42", **extra):
 
         ################################### Initialisation des variables publiques ##################################
         self.monnaie = monnaie
@@ -59,27 +59,24 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         self._solde = solde_initial if solde_initial >= 0 else 0
 
         while self._numero_compte is None:
-            un_num = Secu.Verif.dispo(compte=num_compte)
+            un_num = Securite.dispo(num_compte)
             if un_num is False or type(un_num) is str:
-                num_compte = Gen.chaine_aleatoire(longueur=10, style=Message.DIGITS)
+                num_compte = Generer.chaine_aleatoire(longueur=10, style=Message.DIGITS)
             else:
                 self._numero_compte = num_compte
 
         ################################### Initialisation des variables protégées ##################################
         if extra_secu:
-            self.__code = Gen.chaine_aleatoire(longueur=6, style=Message.HEXADECIMAL) if code == '' else code
+            self.__code = Generer.chaine_aleatoire(longueur=6, style=Message.HEXADECIMAL) if code == '' else code
         else:
-            self.__code = Gen.chaine_aleatoire(longueur=4, style=Message.DIGITS)
+            self.__code = Generer.chaine_aleatoire(longueur=4, style=Message.DIGITS)
 
         if Message.DEBUG:
             message_nouveau_compte = f"Un compte pour {self.nom_proprietaire}," \
                                      f" avec le n° de compte: {self._numero_compte}," \
                                      f"avec un solde initial de {self._solde}{self.monnaie}," \
                                      f"et le code secret: {self.__code}.\n vient d'etre créé."
-            print(message_nouveau_compte)
-        else:
-            print(f"Votre compte n°{self._numero_compte}, avec le code: {self.__code} vient d'être créé.")
-        # self._enregistrer()
+            info(message_nouveau_compte)
 
     ##########################################  Fonctions Privées  #####################################################
     ##########################################  Wrappers #####################################################
@@ -88,7 +85,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
 
         def verif(num):
             if type(num) is not (int, float):
-                Gen.fraude(self._numero_compte, str(func), str(num))
+                Generer.fraude(self._numero_compte, str(func), str(num))
             return func(num)
 
         return verif
@@ -107,25 +104,29 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         """
 
         if isinstance(valeur, str):
-            return print(Message.ONLY_NUMBERS_ERROR)
+            error(Message.ERREUR_NOMBRES)
+            return self._solde
         elif valeur < 0:
-            return print(Message.SOLDE_ERROR_MSG)
-        print(f"Vous souhaitez retirer: {valeur}{self.monnaie}")
+            error(Message.SOLDE_ERROR_MSG)
+            return
+        info(f"Vous souhaitez retirer: {valeur}{self.monnaie}")
 
-        # En mode curieux, on ne demandera pas le code, sauf si vous désactivez l'option (Messages/Static_strings.py).
+        # En mode curieux, on ne demandera pas le code, sauf si vous désactivez l'option (Message/Static_strings.py).
         if Message.NO_CODE:
             pass
         else:
             code = input(Message.ASK_CODE)
             if code != self.__code:
-                Gen.fraude(self._numero_compte, "code_invalide", code)
-                return print("Code Faux !")
-        # fin if DEBUG
+                Generer.fraude(self._numero_compte, "code_invalide", code)
+                info("Code Faux !")
+        # fin if NO_CODE
+
         if self._solde + autorisation < valeur:
-            return print("Solde insuffisant!")
+            info("Solde insuffisant!")
+            return
         self._solde -= valeur
-        print(f"Un retrait de {valeur}{self.monnaie} a été effectue")
-        Gen.historique(self._numero_compte, valeur)
+        info(f"Un retrait de {valeur}{self.monnaie} a été effectue")
+        Generer.historique(self._numero_compte, valeur)
         self.afficher_solde()
 
     def versement(self, valeur: float) -> None:
@@ -134,15 +135,15 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
 
         """
         if isinstance(valeur, str):
-            return print(Message.ONLY_NUMBERS_ERROR)
+            raise ValueError(Message.ERREUR_NOMBRES)
         if type(valeur) is not (int or float):
-            Gen.fraude(self._numero_compte, "versement")
-            return print(Message.NEGATIF_MSG)
+            Generer.fraude(self._numero_compte, "versement")
+            raise ValueError(Message.NEGATIF_MSG)
         valeur = abs(valeur)  # esquiver
 
         self._solde += valeur
-        print(f"Un depot de {valeur}{self.monnaie} a ete effectue")
-        Gen.historique(self._numero_compte, valeur)
+        info(f"Un depot de {valeur}{self.monnaie} a ete effectue")
+        Generer.historique(self._numero_compte, valeur)
         self.afficher_solde()
 
     def afficher_solde(self) -> None:
@@ -165,31 +166,6 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
 
         print(self.__code)  # Aller, on est gentil ;)
 
-    def __enregistrer(self, un_compte):  # DEPRECATED : Ne pas utiliser...
-        """ Permet la sauvegarde d'un compte, pour la persistance des données.
-
-            #format:
-            {nom:compte:solde:monnaie:code:type:arg1:arg2:pouce:arg4}
-
-        """
-        # TODO: _enregistrer : faire en sorte que les informations des enfants puissent être enregistrées.
-
-        if Secu.Verif.dispo(compte=self._numero_compte) is True:
-            with Gen.my_open("Comptes.json", "a+") as f:  # Ajouter le compte au fichier
-                to_save = str(self)
-                try:  # CompteCourant
-                    to_save += ""
-                except:
-                    pass
-
-                try:  # CompteEpargne
-                    to_save
-                except:
-                    pass
-                """# if anti-json:
-                # print(to_save, file=f)"""
-        f.close()
-
     ##########################################  Fonctions Magiques  ####################################################
 
     ##########################################  OPERATIONS  ####################################################
@@ -207,7 +183,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
     ##########################################  COMPARAISONS  ####################################################
     def __eq__(self, autre):
         """ '==' permet:
-                la comparaison de deux comptes  pour savoir si le propriétaire est le même
+                la comparaison de deux comptes pour savoir si le propriétaire est le même
                 la comparaison à un nombre
         """
         # TODO: ajouter une sécurité supplémentaire pour assignation.
@@ -216,7 +192,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         elif self.nom_proprietaire == autre.nom_proprietaire:
             return True
 
-        return (f"assignation de {type(autre)} à {type(Compte)} impossible.\n\
+        raise TypeError(f"assignation de {type(autre)} à {type(Compte)} impossible.\n\
                                 Compte / int / float, acceptés)")
 
     def __gt__(self, other) -> int:  # int plus rapide que bool <- une classe en moins à instancier
@@ -225,7 +201,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         """
         if isinstance(int, other) or isinstance(float, other):
             return self._solde > other
-        print("Impossible de comparer a autre chose qu'un nombre.")
+        raise TypeError
 
     def __ge__(self, other) -> int:  # int plus rapide que bool <- une classe en moins à instancier
         """
@@ -233,7 +209,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         """
         if isinstance(int, other) or isinstance(float, other):
             return self._solde > other
-        print("Impossible de comparer a autre chose qu'un nombre.")
+        raise TypeError
 
     def __lt__(self, other) -> int:  # int plus rapide que bool <- une classe en moins à instancier
         """
@@ -241,7 +217,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         """
         if isinstance(int, other) or isinstance(float, other):
             return self._solde > other
-        print("Impossible de comparer a autre chose qu'un nombre.")
+        raise TypeError
 
     def __le__(self, other) -> int:  # int plus rapide que bool <- une classe en moins à instancier
         """
@@ -249,19 +225,22 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         """
         if isinstance(int, other) or isinstance(float, other):
             return self._solde > other
-        print("Impossible de comparer a autre chose qu'un nombre.")
+        raise ValueError()
 
     def __str__(self):
         """
         Renvoie les informations du compte en clair (sauf le mdp, qui est hashé), préformaté pour JSON,
         dans le cadre d'une intégration future avec interfacing
 
-        remarque : Ne pas oublier de récupérer les __str__ du child pour finir la chaine. Sinon, fermer avec "}"
+        /!\\ Remarque /!\\: Ne pas oublier de récupérer les __str__ du child pour finir la chaine.
+         Sinon, fermer avec "}"
         """
-        cat_string = "{\n" + \
-                     f"\"nom\":{self.nom_proprietaire},\n\"solde\":\"{self._solde}\",\n" \
-                     f"\"num_compte\":\"{self._numero_compte}\",\n" \
-                     f"\"code\":\"{md5(self.__code.encode('utf-8')).hexdigest()}\",\n\"monnaie\":\"{self.monnaie}\",\n"
+        cat_string = "{" \
+                     f'"nom":"{self.nom_proprietaire}",' \
+                     f'"solde":"{self._solde}",' \
+                     f'"num_compte":"{self._numero_compte}",' \
+                     f'"code":"{md5(self.__code.encode()).hexdigest()}",' \
+                     f'"monnaie":"{self.monnaie}",'
 
         # a_retourner = cat_string  ##TODO: si jamais le client ne souhaite pas le json, formatage classique x:x:x:x
         return cat_string
@@ -269,4 +248,4 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
 
 ##########################################  Fonction test_module  ####################################################
 if __name__ == '__main__':
-    print(EXECUTE)
+    print(Message.EXECUTE)
