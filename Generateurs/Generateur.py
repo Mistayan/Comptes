@@ -8,7 +8,8 @@ import random
 from datetime import datetime
 import os
 import re
-import Messages.Static_strings as Message
+import Message
+
 
 ##########################################  SNIPPETS  #####################################################
 
@@ -30,26 +31,28 @@ def chaine_aleatoire(longueur: int, style: str) -> str:
 
          ... et bien d'autres ... (Vous pouvez aussi rentrer une chaine de characters personnalisé)
     """
-    # Aller, c'est bien parce qu'on a vu yield que je fais ça.... sinon c'est un simple:
+
+    # .... sinon c'est un simple:
     #   return ''.join(random.choice(style) for i in range(longueur))
 
     def _choix_aleatoire():  # Fonction imbriquée (et donc privée ?), utilisable uniquement au sein de cette fonction.
-        for _ in range(longueur):  # Le petit _ pour dire osef
-            yield random.choice(style)  # Yield est un return à mémoire. Retourne un generateur itérable.
+        for _ in range(longueur):  # Le petit _ pour dire 'pas important'
+            # Yield est un return à mémoire. Retourne un generateur itérable.
+            yield random.choice(style)
+        # ^^^^^^^^ Au prochain appel de la fonction, reprendra à cette ligne
 
-    ret = ""
-    for bout_de_code in _choix_aleatoire():
-        ret += bout_de_code
+    ret = ''.join(elem for elem in _choix_aleatoire())
     return ret
 
-
+def chaine_vers_json(chaine:str):
+    print(chaine)
 
 def my_open(fichier: str, mode: str = 'r', encoding: str = "utf-8"):
     """
         Permet d'ouvrir un fichier avec le mode voulu.
-        Si le fichier n'existe pas, de le créer, et de l'ouvrir avec le mode voulu.
+        Si le fichier n'existe pas, de le cr?er, et de l'ouvrir avec le mode voulu.
     """
-    if not re.search(r":[\\]|[/]", fichier):  # Path relatif détecté. Petit regex bien pratique.
+    if not re.search(r":[\\]|[/]", fichier):  # Path relatif d?tect?. Petit regex bien pratique.
         dossier_actuel = os.path.abspath('.') + "\\"  # On ajoute le path complet.
     else:
         dossier_actuel = ""
@@ -57,23 +60,23 @@ def my_open(fichier: str, mode: str = 'r', encoding: str = "utf-8"):
         f = open(f"{dossier_actuel}{fichier}", mode=mode, encoding=encoding)
         return f if f else None
     except FileNotFoundError as e:
-        f = open(fichier, 'w')  # Du coup, on crée le fichier.
+        f = open(fichier, 'w')  # Du coup, on cr?e le fichier.
         f.close()           # Pas le bon mode, on ferme.
-    return my_open(fichier, mode=mode, encoding=encoding)  # Bouclage des vérifications de sécurité.
+    return my_open(fichier, mode=mode, encoding=encoding)  # Bouclage des v?rifications de s?curit?.
 
 
 def fraude(compte: str, func: str, arg: str = "") -> None:
-    """Enregistre dans le fichier approprié:
-    la fraude/tentative de retrait sans solde/... constatée
+    """Enregistre dans le fichier appropri?:
+    la fraude/tentative de retrait sans solde/... constat?e
 
     :compte =>
-    Le compte mis en défaut
+    Le compte mis en d?faut
 
     :func =>
-    Quelle action l'utilisateur essayait à ce moment.
+    Quelle action l'utilisateur essayait ? ce moment.
 
     :arg =>
-    Une valeur indicative associée à l'action enregistrée
+    Une valeur indicative associ?e ? l'action enregistr?e
     """
 
     fichier = f"Rapports/{func}.txt"
@@ -82,7 +85,7 @@ def fraude(compte: str, func: str, arg: str = "") -> None:
         print(f"{compte} ; {date} ===> {arg} <===", file=f)
         f.close()
         if Message.DEBUG:
-            print(f"tentative enregistrée")
+            print(f"tentative enregistr?e")
     return
 
 
@@ -92,14 +95,14 @@ def historique(compte, valeur) -> None:
         print(f"{date} // {valeur}", file=f)
         f.close()
         if Message.DEBUG:
-            print("Un évènement vient d'être historisé dans ", f"Historique/{compte}.txt")
+            print("Un ?v?nement vient d'?tre historis? dans ", f"Historique/{compte}.txt")
     return
 
 ##########################################  Fonction test_module  ####################################################
 if __name__ == '__main__':
     import pprint
     pp = pprint.PrettyPrinter(width=42, compact=True)
-    """Je vois pas comment controller l'aléatoire... à part avec un bon vieux PRINT !"""
+    """Je vois pas comment controller l'al?atoire... ? part avec un bon vieux PRINT !"""
     chaine = chaine_aleatoire(style=BRAIN_FUCK, longueur=2500)
     pp.pprint(chaine)
 
