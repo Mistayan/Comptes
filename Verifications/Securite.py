@@ -39,7 +39,26 @@ class Verif:  # Définition d'une classe pour future maitrise de la sécurité des 
             else:  # On a reçu une liste
                 pass  # TODO faire en liste, pour l'application
 
-        return True
+def scan_file(numero_en_str: str = None):
+    """
+    :arg
+     Prend une chaine de caracteres;
+     Cherche la chaine de caracteres dans le fichier de comptes
+
+    :return
+     True si présent
+     False si absent
+    """
+
+    f = Gen.my_open("comptes.json", "r+")
+    for line in f.read():
+        if numero_en_str in line:
+            print("duplicate found")
+            f.close()
+            return True
+    f.close()
+    return False
+
 
 ##########################################  Fonctions Partagées  ###################################################
 
