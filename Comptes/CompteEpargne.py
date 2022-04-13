@@ -14,25 +14,30 @@ class CompteEpargne(Compte):
 
     ##########################################  Class Init  ####################################################
     def __init__(self, interets: float = 1.05, **kwargs):
-
         super().__init__(**kwargs)
         self._pourcentageInterets = interets
         print(f"Celui-ci est de type Compte Epargne, avec un taux d'interets annuel de {interets}{self.monnaie}")
 
     ##########################################  Methodes  ####################################################
-    def versement(self, valeur: float) -> None:  # Override, pour appliquer les taux d'intérêts
+    def versement(self, valeur: float):  # Override, pour appliquer les taux d'intérêts
+        """
+            Permet d'ajouter de l'argent sur le compte.
+          :return :
+          retourne le nouveau solde.
+        """
         super().versement(valeur=valeur)
-        self.appliquer_interets()
+        return (self.appliquer_interets())
 
     def appliquer_interets(self):
         """
             Par décret, les intérêts sont actuellement fixés à 1.05% par mois.
+            :return:
+            retourne le nouveau solde.
         """
-        # FIXME : bien appliquer le calcul
-        print("Nous allons appliquer votre taux d'intérêt.")
-        interets = self._solde * (self._pourcentageInterets * 100 * self._solde)
+        interets = self._pourcentageInterets * self._solde - self._solde
         print(f"Interets acquis : {interets}")
         super().versement(interets)
+        return self._solde
 
     def __str__(self) -> str:  # Surcharge
         """
@@ -40,6 +45,6 @@ class CompteEpargne(Compte):
         """
         # Mais on appelle quand même maman pour la prévenir qu'on reste chez Salomé ce soir;)
         infos_parent = super().__str__()
-        infos_enfant = f"\"autorisation\":\"{self._pourcentageInterets}\",\n" \
+        infos_enfant = f"\"autorisation\":\"{self._pourcentageInterets}\"" \
                        "}\n"
         return infos_parent + infos_enfant
