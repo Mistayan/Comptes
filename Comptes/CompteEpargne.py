@@ -1,6 +1,6 @@
 ##########################################  IMPORTS  ####################################################
 from .Compte import Compte
-
+import Message.Static_strings as Message
 
 ##########################################  Class definition  ####################################################
 
@@ -13,10 +13,13 @@ class CompteEpargne(Compte):
     _pourcentageInterets: float
 
     ##########################################  Class Init  ####################################################
-    def __init__(self, interets: float = 1.05, **kwargs):
+    def __init__(self, interets: float = 5, **kwargs):
         super().__init__(**kwargs)
+        if interets < 5 or interets > 5:
+            interets = 1 + 5 / 100
         self._pourcentageInterets = interets
-        print(f"Celui-ci est de type Compte Epargne, avec un taux d'interets annuel de {interets}{self.monnaie}")
+        if Message.DEBUG :
+            print(f"Celui-ci est de type Compte Epargne, avec un taux d'interets annuel de {interets}{self.monnaie}")
 
     ##########################################  Methodes  ####################################################
     def versement(self, valeur: float):  # Override, pour appliquer les taux d'intérêts
@@ -30,13 +33,13 @@ class CompteEpargne(Compte):
 
     def appliquer_interets(self):
         """
-            Par décret, les intérêts sont actuellement fixés à 1.05% par mois.
+            Par decret, les interets sont actuellement fixés à 5% par depot.
             :return:
             retourne le nouveau solde.
         """
         interets = self._pourcentageInterets * self._solde - self._solde
-        print(f"Interets acquis : {interets}")
-        super().versement(interets)
+        print(f"Interets acquis : {interets:.2f} {self.monnaie}")
+        super().versement(abs(interets))
         return self._solde
 
     def __str__(self) -> str:  # Surcharge
