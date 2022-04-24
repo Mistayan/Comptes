@@ -61,21 +61,21 @@ class CompteCourant(Compte):
 
     def appliquer_agios(self):
         """
-           Si l'utilisateur effectue un retrait lors du decouvert.... on appliquera cette méthode !
+           Si l'utilisateur effectue un retrait lors du decouvert.... on appliquera cette methode !
             L'on considèrera qu'à 0 euro, nous sommes déjà à decouvert, n'ayant pas les capacités de retrait suffisantes
-               On lui évitera cependant les frais de retraits lors du premier évènement qui l'aura mis en négatif
+               On lui evitera cependant les frais de retraits lors du premier évènement qui l'aura mis en négatif
                (une seule fois)
-            Attention ! Hors 'coup de pouce', CHAQUE opération à-decouvert appliquera des frais. [Sujet de l'exercice]
+            Attention ! Hors 'coup de pouce', CHAQUE operation à-decouvert appliquera des frais. [Sujet de l'exercice]
         """
-        if self._solde > 0:
-            pass
-        elif self._solde < 0 and self.__coup_de_pouce is True:  # En négatif et pas encore utilisé le coup de pouce ?
+        if self._solde >= 0:
+            pass  # Rien a faire si rien a retirer.
+        elif self._solde < 0 and self.__coup_de_pouce is True:  # En negatif et pas encore utilise le coup de pouce ?
             self.__coup_de_pouce = False
         else:
-            # Nous avons donc un dépensier .... Il va payer !
-            facturation = abs(self._solde * (self._pourcentage_agios / 100))
-            # print(f"Votre compte va être débité de {facturation}{self.monnaie},"
-            #       f" dans le cadre de notre politique de retraits.")
+            # Nous avons donc un depensier .... Il va payer !
+            facturation = self._solde * self._pourcentage_agios
+            print(f"Votre compte va etre debite de {facturation} {self.monnaie},"
+                  f" dans le cadre de notre politique de retraits.")
             self._solde = self._solde - facturation
             self.afficher_solde()
         return self._solde
@@ -87,7 +87,7 @@ class CompteCourant(Compte):
         """
         Permet de renvoyer les informations du compte au format str(json)
         """
-        # Mais on appelle quand même maman pour récupérer ses informations.
+        # Mais on appelle quand meme maman pour recuperer ses informations.
         infos_parent = super().__str__()
         infos_enfant = f"\"autorisation\":\"{self._autorisation_decouvert}\"," \
                        f"\"interets\":\"{self._pourcentage_agios}\"," \
