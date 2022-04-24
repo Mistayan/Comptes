@@ -49,7 +49,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
     @abstractmethod  # NON, pas le droit d'appeler Compte seul ! CompteXxxxxx obligatoire
     def __init__(self, nom: str = None, num_compte: str = None,
                  solde_initial: int = 0, code: str = '', extra_secu: bool = False,
-                 monnaie: str = u"\x42", force=False, **extra):
+                 monnaie: str = "E", force=False, **extra):
 
         ################################### Initialisation des variables publiques ##################################
         self.monnaie = monnaie
@@ -86,17 +86,28 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
             self.__code = md5(str(self.__code).encode("utf-8")).hexdigest()
 
     ##########################################  Fonctions Privées  #####################################################
+    def __demander_code(self):
+        if Message.NO_CODE:
+            return True
+        else:
+            code = input(Message.ASK_CODE)
+            if md5(str(code).encode("utf-8")).hexdigest() == self.__code:
+                return True  # Code OK
+            Generer.fraude(self._numero_compte, "code_invalide", code)
+            info("Code Faux !")
+            return False
+
 
     ##########################################  Fonctions Partagées  ###################################################
 
     def retrait(self, valeur: float, autorisation=0) -> float:
         """
         Permet le retrait d'une somme demandée
-            Si une valeur non positive est rentrée (tentative de fraude), l'operation est enregistree dans fraudes.txt
+            Si une valeur non positive est rentree (tentative de fraude), l'operation est enregistree dans fraudes.txt
 
             Si l'utilisateur ne donne pas le bon code.... Pas de sous !
 
-            Si le solde est insuffisant, l'opération est refusee, avec un message d'erreur ;
+            Si le solde est insuffisant, l'operation est refusee, avec un message d'erreur ;
             Exception faite : Si un compte courant a une autorisation adaptee.
         """
 
@@ -106,24 +117,18 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
             except :
                 print("Error")
         if not (isinstance(valeur, int) or isinstance(valeur, float)):
-            raise ValueError(Message.ERREUR_NOMBRES)
-
-        # En mode curieux, on ne demandera pas le code, sauf si vous désactivez l'option (Message/Static_strings.py).
-        if Message.NO_CODE:
-            pass
-        else:
-            code = input(Message.ASK_CODE)
-            if code != self.__code:
-                Generer.fraude(self._numero_compte, "code_invalide", code)
-                info("Code Faux !")
-        # fin if NO_CODE
-
-        if self._solde + autorisation < valeur:
-            info("Solde insuffisant!")
+            print(Message.ERREUR_NOMBRES)
             return self._solde
-        self._solde -= valeur
-        info(f"Un retrait de {valeur}{self.monnaie} a été effectue")
-        Generer.historique(self._numero_compte, "retrait", valeur)
+
+        # En mode NO_CODE, on ne demandera pas le code, sauf si vous désactivez l'option (Message/Static_strings.py).
+        # Pratique pour le debug.... Ou autre.
+        if self.__demander_code() is True:
+            if self._solde + autorisation < valeur:
+                print("Solde insuffisant!")
+                return self._solde
+            self._solde -= valeur
+            print(f"Un retrait de {valeur}{self.monnaie} a ete effectue")
+            Generer.historique(self._numero_compte, "retrait", valeur)
         self.afficher_solde()
         return self._solde
 
@@ -151,7 +156,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
     def afficher_solde(self) -> None:
         """Affiche le solde actuel
         """
-        print(f"Votre solde: { self._solde:.2f}{self.monnaie}")
+        print(f"Votre solde: { self._solde:.2f} {self.monnaie}")
 
     def get_num(self):
         """ Retourne le numero du compte. """
@@ -187,10 +192,10 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
     ##########################################  CASTINGS  ####################################################
     def __str__(self):
         """
-        Renvoie les informations du compte en clair (sauf le mdp, qui est hashe), préformaté pour JSON,
+        Renvoie les informations du compte en clair (sauf le mdp, qui est hashe), preformate pour JSON,
         dans le cadre d'une integration future avec interfacing
 
-        /!\\ Remarque /!\\: Ne pas oublier de récuperer les __str__ du child pour finir la chaine.
+        /!\\ Remarque /!\\: Ne pas oublier de recuperer les __str__ du child pour finir la chaine.
          Sinon, fermer avec "}"
         """
         cat_string = "{" \
