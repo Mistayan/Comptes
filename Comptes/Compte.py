@@ -152,6 +152,9 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         """
         print(f"Votre solde: { self._solde:.2f}{self.monnaie}")
 
+    def get_num(self):
+        """ Retourne le numero du compte. """
+        return self._numero_compte
     ##########################################  Fonctions Spéciales  #################################################
     def connect(self, num, code) -> bool:
         """
