@@ -82,7 +82,7 @@ def quitter():
     sys.exit()
 
 
-def gestion_compte(compte, auth=None):
+def gestion_compte(compte):
     """Permet de gérer un compte (faire des opérations dessus)
     Prends un compte(Epargne/Courant) en parametre."""
     while True:
@@ -91,7 +91,7 @@ def gestion_compte(compte, auth=None):
         print("2: Retirer de l'argent.")
         print("3: Deposer de l'argent.")
         print("4: Faire une réclamation.")
-        print("4: Deconnexion")
+        print("5: Deconnexion")
         choix = input(Message.ASK)
         match choix:
             case "1":
@@ -101,37 +101,19 @@ def gestion_compte(compte, auth=None):
             case "3":
                 compte.versement(input("Combien souhaitez-vous deposer?"))
             case "4":
+                Gen.fraude(compte.get_num(), "reclamation", input("Votre message ? (nous vous repondrons au plus vite"))
+            case "5":
                 return menu_principal(liste_comptes)
             case _:
                 pass
-
     # END while
-
-
-def ask_code(mode_parano: bool):
-    """Demande le code voulu à l'utilisateur, en tenant compte de son choix sur la parano"""
-    code = None
-    while code is None:
-        if mode_parano is True:
-            message_dynamique = "(ce que vous voulez, minimum 4 characters)"
-        else:
-            message_dynamique = "(4 chiffres)"
-        code = input("Inserez le code voulu" + message_dynamique + Message.ASK)
-        if mode_parano and len(code) >= 4:
-            return code
-        elif len(code) == 4 and re.match(r'[0-9]{4}', code):
-            return code
-        if len(code) == 0:
-            return ''
-        code = None
-    return code
 
 
 def ask_nom(type_compte):
     """Demande son nom à l'utilisateur. S'il souhaite créer un compte Courant, le nom est obligatoire."""
     nom = None
     while nom is None:
-        nom = input("votre nom " + "(Obligatoire)" if type_compte == "c" else "" + Message.ASK)
+        nom = input("votre nom:" + ("(Obligatoire)" if type_compte == "c" else "") + Message.ASK)
         if len(nom) == 0 and type_compte == "c":
             nom = None
             print("Vous devez rentrer un nom!")
@@ -168,21 +150,20 @@ def questionnaire_commun(type_compte):
     """Demande les informations de base d'un compte"""
     nom = ask_nom(type_compte)
     parano = ask_parano()
-    code = ask_code(parano)
-    return [nom, code]
+    return [nom, parano]
 
 
 def questionnaire_courant() -> CompteCourant:
     """Assistant à la création d'un compte courant"""
     infos = questionnaire_commun("c")
     infos.append(ask_decouvert())
-    return CompteCourant(nom=infos[0], code=infos[1], autorisation=float(infos[2]))
+    return CompteCourant(nom=infos[0], extra_secu=infos[1], autorisation=float(infos[2]), new=True)
 
 
 def questionnaire_epargne() -> CompteEpargne:
     """Assistant à la création d'un compte Epargne"""
     infos = questionnaire_commun("e")
-    return CompteEpargne(nom=infos[0], code=infos[1])
+    return CompteEpargne(nom=infos[0], extra_secu=infos[1], new=True)
 
 
 def acces_compte(liste_comptes, essais: int = 0):
