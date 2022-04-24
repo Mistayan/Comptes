@@ -31,6 +31,7 @@ def dispo(compte: str = None, code: str = None, ):
                 f.close()
                 return line.split(":")[1]  # Retourne le numero du compte.
         f.close()
+    return True
 
 
 def scan_file(numero_en_str: str = None):
