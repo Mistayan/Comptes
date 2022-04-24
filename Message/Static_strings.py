@@ -5,8 +5,8 @@ from string import hexdigits as HEXADECIMAL
 pour info, je referais pas ça.
  Je me rends compte à la fin du projet que ça met un bordel monstre dans les choix de prédiction auto...
 """
-DEBUG = True
-NO_CODE = DEBUG
+DEBUG = False
+NO_CODE = False
 
 NOM_BANQUE = "Anno Banque"
 MESSAGE_BIENVENUE = f"Bonjour, et bienvenue chez {NOM_BANQUE}.\n" \
