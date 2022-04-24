@@ -101,8 +101,11 @@ def gestion_compte(compte):
             case "3":
                 compte.versement(input("Combien souhaitez-vous deposer?"))
             case "4":
-                Gen.fraude(compte.get_num(), "reclamation", input("Votre message ? (nous vous repondrons au plus vite"))
+                Gen.fraude(compte.get_num(), "reclamation", input("Votre message ?"
+                                                                  " (nous reviendrons vers vous au plus vite)\n?>"))
+                print("Merci pour votre participation.")
             case "5":
+                print("A bientot !")
                 return menu_principal(liste_comptes)
             case _:
                 pass
