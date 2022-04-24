@@ -131,14 +131,14 @@ def ask_parano():
         elif re.match(r"^[nN]$", parano):
             return False
         parano = None
-        print("Valeur éronnée, recommencez")
+        print("Valeur eronnee, recommencez")
 
 
 def ask_decouvert():
     """Demande à l'utilisateur le decouvert qu'il souhaiterait, on controlera les valeurs renseignees"""
     decouvert = None
     while decouvert is None:
-        decouvert = input("Combien souhaitez-vous de découvert autorise ?")
+        decouvert = input("Combien souhaitez-vous de decouvert autorise ?")
         if re.match(r"^[0-9]*\.?[0-9]*$", decouvert):  # Un nombre(, a virgule)?
             return decouvert
         else:

@@ -12,8 +12,8 @@ from Verifications import ErreurUtilisateurNonDefini
 #
 class CompteCourant(Compte):
     """
-        Crée un compte avec des possibilités de retraits sous le seuil de 0.0.
-        À chaque retrait, si l'utilisateur possède un solde négatif :
+        Cree un compte avec des possibilites de retraits sous le seuil de 0.0.
+        A chaque retrait, si l'utilisateur possede un solde négatif :
          on apposera des frais équivalents aux taux classiques en vigueur (12% de la somme retirée)
 
         ARGUMENTS :
@@ -24,7 +24,7 @@ class CompteCourant(Compte):
 
     _autorisation_decouvert: float
     _pourcentage_agios: float
-    __coup_de_pouce: bool = True  # On autorise un retrait à découvert par mois, sans frais. ;)
+    __coup_de_pouce: bool = True  # On autorise un retrait a decouvert par mois, sans frais. ;)
 
     #
     ##########################################  __init__  ####################################################
@@ -41,7 +41,7 @@ class CompteCourant(Compte):
             agios = 5
         self._pourcentage_agios = agios / 100
 
-        # print(f"Ce compte est de type CompteCourant, avec autorisation de découvert de"
+        # print(f"Ce compte est de type CompteCourant, avec autorisation de decouvert de"
         #      f" {self._autorisation_decouvert}{self.monnaie}, "
         #      f"et un taux d'intérêts de {self._pourcentage_agios}%")
 
@@ -49,7 +49,7 @@ class CompteCourant(Compte):
     ##########################################  Fonctions Normale  ####################################################
     def retrait(self, valeur: float, autorisation: int = 0):
         """
-        Surcharge de la méthode mère pour pouvoir appliquer l'autorisation de découvert.
+        Surcharge de la méthode mère pour pouvoir appliquer l'autorisation de decouvert.
          Appel ensuite la méthode de la classe mère avec les arguments supplémentaires,
         Et enfin, nous appliquerons des agios si l'utilisateur était à 0 ou moins avant son retrait
         (ou sa tentative de retrait).
@@ -61,11 +61,11 @@ class CompteCourant(Compte):
 
     def appliquer_agios(self):
         """
-           Si l'utilisateur effectue un retrait lors du découvert.... on appliquera cette méthode !
-            L'on considèrera qu'à 0 euro, nous sommes déjà à découvert, n'ayant pas les capacités de retrait suffisantes
+           Si l'utilisateur effectue un retrait lors du decouvert.... on appliquera cette méthode !
+            L'on considèrera qu'à 0 euro, nous sommes déjà à decouvert, n'ayant pas les capacités de retrait suffisantes
                On lui évitera cependant les frais de retraits lors du premier évènement qui l'aura mis en négatif
                (une seule fois)
-            Attention ! Hors 'coup de pouce', CHAQUE opération à-découvert appliquera des frais. [Sujet de l'exercice]
+            Attention ! Hors 'coup de pouce', CHAQUE opération à-decouvert appliquera des frais. [Sujet de l'exercice]
         """
         if self._solde > 0:
             pass

@@ -23,7 +23,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
     Pour des raisons ethiques, sera cependant obligatoire pour un compte courant.\n
 
     :num_compte\n
-    Si un numero de compte est donne, on s'assurera qu'il corresponde au format legal, et qu'il n'existe pas déjà.
+    Si un numero de compte est donne, on s'assurera qu'il corresponde au format legal, et qu'il n'existe pas déja.
     Si le numero de compte donné existe, on chargera le compte dans l'interface.
     Si aucun numero de compte n'est renseigne (nouveau client), on en generera un (qui n'existe pas encore).
 
@@ -42,7 +42,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
 
     nom_proprietaire: str
     monnaie: str
-    _numero_compte: str = None  # On initialise à None, au cas ou le num_compte fournit est invalide, ou deja pris.
+    _numero_compte: str = None  # On initialise a None, au cas ou le num_compte fournit est invalide, ou deja pris.
     _solde: float
     __code: str
 

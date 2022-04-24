@@ -14,7 +14,7 @@ MESSAGE_BIENVENUE = f"Bonjour, et bienvenue chez {NOM_BANQUE}.\n" \
 EXECUTE = "S'il vous plait, veuillez exécuter  Main.py, à la racine du projet."
 FAIRE_CHOIX = "Faites votre choix :>?"
 INVALIDE = "Choix invalide, recommencez"
-EXPLICATION_COMPTE_COURANT = "Ce compte vous permet d'avoir un découvert autorise. En contre partie, si vous utilisez" \
+EXPLICATION_COMPTE_COURANT = "Ce compte vous permet d'avoir un decouvert autorise. En contre partie, si vous utilisez" \
                              " cet argent, vous serez déduit d'un montant supplémentaire," \
                              " conformément aux lois en vigueur"
 
