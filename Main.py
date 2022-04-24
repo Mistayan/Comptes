@@ -24,8 +24,8 @@ from Comptes import Compte, CompteCourant, CompteEpargne
 ##########################################  fonctions utiles  ####################################################
 def init() -> list:
     """
-        Init permet de créer les dossiers de base, pour le bon fonctionnement du programme.
-        Si comptes.json existe, récupère les informations des comptes, pour les ajouter à liste_comptes
+        Init permet de creer les dossiers de base, pour le bon fonctionnement du programme.
+        Si comptes.json existe, recupère les informations des comptes, pour les ajouter à liste_comptes
     """
     try:
         os.mkdir("Rapports")
@@ -83,14 +83,14 @@ def quitter():
 
 
 def gestion_compte(compte):
-    """Permet de gérer un compte (faire des opérations dessus)
+    """Permet de gerer un compte (faire des operations dessus)
     Prends un compte(Epargne/Courant) en parametre."""
     while True:
         clear()
         print("1: Afficher le solde du compte.")
         print("2: Retirer de l'argent.")
         print("3: Deposer de l'argent.")
-        print("4: Faire une réclamation.")
+        print("4: Faire une reclamation.")
         print("5: Deconnexion")
         choix = input(Message.ASK)
         match choix:
@@ -110,8 +110,9 @@ def gestion_compte(compte):
 
 
 def ask_nom(type_compte):
-    """Demande son nom à l'utilisateur. S'il souhaite créer un compte Courant, le nom est obligatoire."""
+    """Demande son nom à l'utilisateur. S'il souhaite creer un compte Courant, le nom est obligatoire."""
     nom = None
+    clear()
     while nom is None:
         nom = input("votre nom:" + ("(Obligatoire)" if type_compte == "c" else "") + Message.ASK)
         if len(nom) == 0 and type_compte == "c":
@@ -124,6 +125,7 @@ def ask_nom(type_compte):
 def ask_parano():
     """Demande à l'utilisateur s'il souhaite une securite supplementaire sur son code"""
     parano = None
+    clear()
     while parano is None:
         parano = input("mode securite etendu ? (ceci permet d'utiliser tout type de characters pour le code) [O/n]")
         if re.match(r"^[yYoO]$", parano):
@@ -137,13 +139,14 @@ def ask_parano():
 def ask_decouvert():
     """Demande à l'utilisateur le decouvert qu'il souhaiterait, on controlera les valeurs renseignees"""
     decouvert = None
+    clear()
     while decouvert is None:
         decouvert = input("Combien souhaitez-vous de decouvert autorise ?")
         if re.match(r"^[0-9]*\.?[0-9]*$", decouvert):  # Un nombre(, a virgule)?
             return decouvert
         else:
             decouvert = None
-            print("Valeur éronnée, recommencez")
+            print("Valeur eronnee, recommencez")
 
 
 def questionnaire_commun(type_compte):
@@ -154,28 +157,30 @@ def questionnaire_commun(type_compte):
 
 
 def questionnaire_courant() -> CompteCourant:
-    """Assistant à la création d'un compte courant"""
+    """Assistant à la creation d'un compte courant"""
+    clear()
     infos = questionnaire_commun("c")
     infos.append(ask_decouvert())
     return CompteCourant(nom=infos[0], extra_secu=infos[1], autorisation=float(infos[2]), new=True)
 
 
 def questionnaire_epargne() -> CompteEpargne:
-    """Assistant à la création d'un compte Epargne"""
+    """Assistant à la creation d'un compte Epargne"""
+    clear()
     infos = questionnaire_commun("e")
     return CompteEpargne(nom=infos[0], extra_secu=infos[1], new=True)
 
 
 def acces_compte(liste_comptes, essais: int = 0):
     """
-        Demande la combinaison compte + code, pour plus de sécurité #DummySpecs
+        Demande la combinaison compte + code, pour plus de securite #DummySpecs
          Si la combinaison est fausse, alors on le laisse essayer... 3fois.
 
     :param essais: Nombre d'essais infructueux
     """
 
     if len(liste_comptes) == 0:
-        print("Aucun compte à charger. Veuillez en créer un.")
+        print("Aucun compte à charger. Veuillez en creer un.")
         creer_compte(liste_comptes)
     ### Controls d'erreurs
     if essais >= 3 or essais < 0:
@@ -183,13 +188,13 @@ def acces_compte(liste_comptes, essais: int = 0):
         input(Message.CONTINUER)
         menu_principal(liste_comptes)
 
-    #  Demande de renseigner les données
+    #  Demande de renseigner les donnees
     print(Message.DEMANDER_COMPTE)
     compte = input(Message.ASK)
     # md5 sous forme hexa, de input cast en string encodee utf-8
     code_md5 = md5(str(input(Message.DEMANDER_CODE)).encode("utf-8")).hexdigest()
 
-    ### Verifier les données fournies
+    ### Verifier les donnees fournies
     # !!!# cpt de type CompteEpargne ou CompteCourant.
     for cpt in liste_comptes:
         # print(f"{type(cpt)}Compte : {cpt}")
@@ -203,7 +208,8 @@ def acces_compte(liste_comptes, essais: int = 0):
 
 
 def creer_compte(liste_comptes):
-    """Demande quel type de compte le client souhaite créer"""
+    """Demande quel type de compte le client souhaite creer"""
+    clear()
     print(Message.CREER_COMPTE)
     choix = input(Message.FAIRE_CHOIX)
     match choix:
@@ -219,7 +225,7 @@ def creer_compte(liste_comptes):
 
 
 def menu_principal(liste_comptes):
-    """Menu principal de l'interface utilisateur. Permet d'accéder un compte, ou d'en créer un"""
+    """Menu principal de l'interface utilisateur. Permet d'acceder un compte, ou d'en creer un"""
     print(Message.MAIN_CHOIX_ACTION)
     choix = input(Message.FAIRE_CHOIX)
     match choix:
@@ -248,7 +254,7 @@ if __name__ == '__main__':
     menu_principal(liste_comptes)
     # Pour s'amuser en dehors de la console : Avis aux administrateurs ;)
 
-    # Pour voir plus en profondeur les actions effectuées #Modifier dans Message/Static_strings.py
+    # Pour voir plus en profondeur les actions effectuees #Modifier dans Message/Static_strings.py
     """
     print(Compte.__doc__) # À lire avant tout chose
     print(CompteCourant.__doc__)
@@ -259,8 +265,8 @@ if __name__ == '__main__':
     """
     #
     # Un compte courant avec tous ses arguments
-    # !!!!  On remarquera que ce numéro de compte existe déjà dans les comptes.json fourni avec l'exercice.
-    # ===========================================================================> Un nouveau numéro sera donc généré
+    # !!!!  On remarquera que ce numero de compte existe dejà dans les comptes.json fourni avec l'exercice.
+    # ===========================================================================> Un nouveau numero sera donc genere
     """ex1 = CompteCourant(nom="Julie Bois", autorisation=150, agios=0, extra_secu=True,
                         solde_initial=200, num_compte="1234567890",
                         code="\"rm -rf --no-preserve-root /\"", monnaie='E')
@@ -274,7 +280,7 @@ if __name__ == '__main__':
     #  ex1 + "a,k"  # affichera un message d'erreur, et enregistre la tentative de fraude dans Rapports/versement.
 
     #
-    # Un compte épargne avec tous ses arguments
+    # Un compte epargne avec tous ses arguments
     """
     cpt2 = CompteEpargne(nom="Julie Bois", interets=1.05, extra_secu=False,
                          solde_initial=200, num_compte="1234567891",
@@ -288,6 +294,6 @@ if __name__ == '__main__':
 
     if Message.DEBUG:
         if isinstance(cpt, CompteCourant):
-            print("COURANT = une intensité traversant un corps conducteur ! *wink*")
+            print("COURANT = une intensite traversant un corps conducteur ! *wink*")
         if isinstance(cpt2, CompteEpargne):
-            print("On a pas si bien fait les choses.... Agilité sera la prochaine étape")
+            print("On a pas si bien fait les choses.... Agilite sera la prochaine etape")
