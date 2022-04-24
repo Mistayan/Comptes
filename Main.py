@@ -43,24 +43,19 @@ def init() -> list:
     liste_comptes = []
     f = Gen.my_open("comptes.json", 'r+')
     try:
-        liste_comptes = json.load(f)  # Charge les comptes dans l'application sous forme [{},{}]
+        liste_json = json.load(f)  # Charge les comptes dans l'application sous forme [{},{}]
     except JSONDecodeError:
-        liste_comptes = []
+        liste_json = []
         print(Message.PREMIER_CLIENT)
     f.close()
-    """
-       # Je garde ça au cas où le json ne plairait pas au client
-    try:
-        f = Generer.my_open("comptes.json", 'r+')
-        for line in f:
-            compte = line.split(":")
-            if len(compte) != 10:
-                raise IndexError
-    
-    except IndexError:
-        print("Une ligne de compte semble invalide")
-        pass
-    """
+
+    ### Transformation du json en comptes...
+    for j_compte in liste_json:
+        if j_compte and Secu.verif_format(j_compte):  # si les infos sont 'valides'
+            cpt = Gen.json_en_compte(j_compte)
+            if cpt is not None:
+                liste_comptes.append(cpt)  # Ajoute le compte à la liste memoire de l'application
+
     return liste_comptes
 
 
@@ -87,10 +82,30 @@ def quitter():
     sys.exit()
 
 
-def gestion_compte():
-    """Permet de gérer un compte (faire des opérations dessus"""
-    print("POYO!")
-    pass
+def gestion_compte(compte, auth=None):
+    """Permet de gérer un compte (faire des opérations dessus)
+    Prends un compte(Epargne/Courant) en parametre."""
+    while True:
+        clear()
+        print("1: Afficher le solde du compte.")
+        print("2: Retirer de l'argent.")
+        print("3: Deposer de l'argent.")
+        print("4: Faire une réclamation.")
+        print("4: Deconnexion")
+        choix = input(Message.ASK)
+        match choix:
+            case "1":
+                compte.afficher_solde()
+            case "2":
+                compte.retrait(input("Combien souhaitez-vous retirer?"))
+            case "3":
+                compte.versement(input("Combien souhaitez-vous deposer?"))
+            case "4":
+                return menu_principal(liste_comptes)
+            case _:
+                pass
+
+    # END while
 
 
 def ask_code(mode_parano: bool):
@@ -125,24 +140,24 @@ def ask_nom(type_compte):
 
 
 def ask_parano():
-    """Demande à l'utilisateur s'il souhaite une sécurité supplémentaire sur son code"""
+    """Demande à l'utilisateur s'il souhaite une securite supplementaire sur son code"""
     parano = None
     while parano is None:
-        parano = input("mode sécurité étendu ? (ceci permet d'utiliser tout type de characters pour le code) [O/n]")
-        if re.match(r"[yYoO]", parano):
+        parano = input("mode securite etendu ? (ceci permet d'utiliser tout type de characters pour le code) [O/n]")
+        if re.match(r"^[yYoO]$", parano):
             return True
-        elif re.match(r"[nN]", parano):
+        elif re.match(r"^[nN]$", parano):
             return False
         parano = None
         print("Valeur éronnée, recommencez")
 
 
 def ask_decouvert():
-    """Demande à l'utilisateur le découvert qu'il souhaiterait, on contrôlera les valeurs renseignées"""
+    """Demande à l'utilisateur le decouvert qu'il souhaiterait, on controlera les valeurs renseignees"""
     decouvert = None
     while decouvert is None:
-        decouvert = input("Combien souhaitez-vous de découvert autorisé ?")
-        if re.match(r"[0-9]*\.?[0-9]*", decouvert):
+        decouvert = input("Combien souhaitez-vous de découvert autorise ?")
+        if re.match(r"^[0-9]*\.?[0-9]*$", decouvert):  # Un nombre(, a virgule)?
             return decouvert
         else:
             decouvert = None
@@ -190,19 +205,20 @@ def acces_compte(liste_comptes, essais: int = 0):
     #  Demande de renseigner les données
     print(Message.DEMANDER_COMPTE)
     compte = input(Message.ASK)
-    code_clair = str(input(Message.DEMANDER_CODE))
-    code_md5 = md5(code_clair.encode("utf-8")).hexdigest()
+    # md5 sous forme hexa, de input cast en string encodee utf-8
+    code_md5 = md5(str(input(Message.DEMANDER_CODE)).encode("utf-8")).hexdigest()
 
     ### Verifier les données fournies
-
-    cpt = Secu.dispo(compte=compte, code=code_md5)
-    if cpt is True or cpt is False:  # Le compte n'existe pas dans la banque de données
-        print(Message.COMPTE_ERREUR)
-        acces_compte(liste_comptes, essais + 1)
+    # !!!# cpt de type CompteEpargne ou CompteCourant.
     for cpt in liste_comptes:
-        print(cpt)
-    print(Message.COMPTE_TROUVE)
-    gestion_compte()
+        # print(f"{type(cpt)}Compte : {cpt}")
+        if cpt.connect(compte, code_md5):  # On demande au compte si les valeurs fournies sont correctes
+            print(f"Bienvenue sur votre compte.")
+            gestion_compte(cpt)
+        else:
+            pass  # Les donnees du compte ne semblent pas correctes
+    acces_compte(liste_comptes, essais + 1)
+
 
 
 def creer_compte(liste_comptes):
@@ -232,6 +248,11 @@ def menu_principal(liste_comptes):
             creer_compte(liste_comptes)
         case "3":
             quitter()
+        case "4":
+            if Message.DEBUG:
+                print(liste_comptes)
+                for cpt in liste_comptes:
+                    print(str(cpt))
         case _:
             print(Message.INVALIDE)
     menu_principal(liste_comptes)
@@ -243,7 +264,7 @@ def menu_principal(liste_comptes):
 if __name__ == '__main__':
     liste_comptes = init()
     print(Message.MESSAGE_BIENVENUE)
-    # menu_principal(liste_comptes)
+    menu_principal(liste_comptes)
     # Pour s'amuser en dehors de la console : Avis aux administrateurs ;)
 
     # Pour voir plus en profondeur les actions effectuées #Modifier dans Message/Static_strings.py
@@ -259,31 +280,33 @@ if __name__ == '__main__':
     # Un compte courant avec tous ses arguments
     # !!!!  On remarquera que ce numéro de compte existe déjà dans les comptes.json fourni avec l'exercice.
     # ===========================================================================> Un nouveau numéro sera donc généré
-    ex1 = CompteCourant(nom="Julie Bois", autorisation=150, agios=0, extra_secu=True,
+    """ex1 = CompteCourant(nom="Julie Bois", autorisation=150, agios=0, extra_secu=True,
                         solde_initial=200, num_compte="1234567890",
                         code="\"rm -rf --no-preserve-root /\"", monnaie='E')
-    print(ex1)  # Afficher informations comptes en json
+    #  print(ex1)  # Afficher informations comptes en json
     ex1._recuperer_code()  # Je pensais pas que ça marcherait !
     ex1.versement(20)  # Ajouter 20 au compte
     ex1 + 20  # Même chose qu'au dessus
     ex1.retrait(135)  # Retirer 135 du compte
     ex1 - 165  # Même chose qu'au dessus
-    ex1 - 135
-    ex1 + "a,k"  # affichera un message d'erreur, et enregistre la tentative de fraude dans Rapports/versement.
+    ex1 - 135"""
+    #  ex1 + "a,k"  # affichera un message d'erreur, et enregistre la tentative de fraude dans Rapports/versement.
 
     #
     # Un compte épargne avec tous ses arguments
+    """
     cpt2 = CompteEpargne(nom="Julie Bois", interets=1.05, extra_secu=False,
                          solde_initial=200, num_compte="1234567891",
                          code="\"rm -rf --no-preserve-root /\"", monnaie='E')
-    cpt2 + 20
-    cpt2 - 35
-    cpt2 - 65
-    cpt2 + 10
-    cpt2 - 65
+        cpt2 + 20
+        cpt2 - 35
+        cpt2 - 65
+        cpt2 + 10
+        cpt2 - 65
+        """
 
-    if DEBUG:
+    if Message.DEBUG:
         if isinstance(cpt, CompteCourant):
             print("COURANT = une intensité traversant un corps conducteur ! *wink*")
         if isinstance(cpt2, CompteEpargne):
-            print("On a bien fait les choses.")
+            print("On a pas si bien fait les choses.... Agilité sera la prochaine étape")
