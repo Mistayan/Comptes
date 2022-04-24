@@ -7,8 +7,8 @@ import random
 from datetime import datetime
 import os
 import re
-import Message
-
+import Message.Static_strings as Message
+from Comptes import CompteCourant, CompteEpargne
 
 ##########################################  SNIPPETS  #####################################################
 
@@ -44,16 +44,12 @@ def chaine_aleatoire(longueur: int, style: str) -> str:
     return ret
 
 
-def chaine_vers_json(chaine: str):
-    print(chaine)
-
-
 def my_open(fichier: str, mode: str = 'r', encoding: str = "utf-8"):
     """
         Permet d'ouvrir un fichier avec le mode voulu.
         Si le fichier n'existe pas, de le creer, et de l'ouvrir avec le mode voulu.
     """
-    if not re.search(r":[\\]|[/]", fichier):  # Path relatif d?tect?. Petit regex bien pratique.
+    if not re.search(r":[\\]|[/]", fichier):  # Path relatif detecte. Petit regex bien pratique.
         dossier_actuel = os.path.abspath('.') + "\\"  # On ajoute le path complet.
     else:
         dossier_actuel = ""
@@ -61,7 +57,7 @@ def my_open(fichier: str, mode: str = 'r', encoding: str = "utf-8"):
         f = open(f"{dossier_actuel}{fichier}", mode=mode, encoding=encoding)
         return f if f else None
     except FileNotFoundError as e:
-        f = open(fichier, 'w')  # Du coup, on cr?e le fichier.
+        f = open(fichier, 'w')  # Du coup, on cree le fichier.
         f.close()  # Pas le bon mode, on ferme.
     return my_open(fichier, mode=mode, encoding=encoding)  # Bouclage des verifications de securite.
 
@@ -86,7 +82,7 @@ def fraude(compte: str, func: str, arg: str = "") -> None:
         print(f"{compte} ; {date} ===> {arg} <===", file=f)
         f.close()
         if Message.DEBUG:
-            print(f"tentative enregistr?e")
+            print(f"tentative enregistree")
     return
 
 
@@ -100,11 +96,30 @@ def historique(compte, valeur) -> None:
     return
 
 
+def json_en_compte(j: dict) -> any:
+    """
+    Recoit un compte formaté en json, certifié d'avoir tous les champs valides.
+    (utiliser prealablement Verif.verif_format)
+
+    retourne un compte, avec les informations contenues dans le dictionnaire
+    """
+
+    if j["type_compte"] == "Epargne":
+        return CompteEpargne(nom=j["nom"], interets=j["interets"],
+                         solde_initial=j["solde"], num_compte=j["num_compte"],
+                         code=j["code"], monnaie=j["monnaie"], force=True)
+    if j["type_compte"] == "Courant":
+        return CompteCourant(nom=j["nom"], autorisation=j["autorisation"], agios=j["agios"],
+                         solde_initial=j["solde"], num_compte=j["num_compte"],
+                         code=j["code"], monnaie=j["monnaie"], force=True)
+    return None
+
+
 ##########################################  Fonction test_module  ####################################################
 if __name__ == '__main__':
     import pprint
 
     pp = pprint.PrettyPrinter(width=42, compact=True)
     """Je vois pas comment controller l'aleatoire... ? part avec un bon vieux PRINT !"""
-    chaine = chaine_aleatoire(style=BRAIN_FUCK, longueur=2500)
+    chaine = chaine_aleatoire(style=Message.BRAIN_FUCK, longueur=2500)
     pp.pprint(chaine)
