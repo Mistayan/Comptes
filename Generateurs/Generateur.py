@@ -87,10 +87,10 @@ def fraude(compte: str, func: str, arg: str = "") -> None:
     return
 
 
-def historique(compte, valeur) -> None:
+def historique(compte, methode: str, valeur) -> None:
     with my_open(f"Historique/{compte}.txt", "a+") as f:
         date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        print(f"{date} // {valeur}", file=f)
+        print(f"{date} /{methode}/ {valeur}", file=f)
         f.close()
         if Message.DEBUG:
             print("Un evenement vient d'etre historise dans ", f"Historique/{compte}.txt")
