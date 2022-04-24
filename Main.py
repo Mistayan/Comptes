@@ -281,6 +281,7 @@ if __name__ == '__main__':
     ex1 - 165  # Même chose qu'au dessus
     ex1 - 135"""
     #  ex1 + "a,k"  # affichera un message d'erreur, et enregistre la tentative de fraude dans Rapports/versement.
+    #  ex1 - "-12"  # affichera un message d'erreur, et enregistre la tentative de fraude dans Rapports/versement.
 
     #
     # Un compte epargne avec tous ses arguments

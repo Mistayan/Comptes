@@ -74,7 +74,7 @@ class CompteCourant(Compte):
         else:
             # Nous avons donc un depensier .... Il va payer !
             facturation = self._solde * self._pourcentage_agios
-            print(f"Votre compte va etre debite de {facturation} {self.monnaie},"
+            print(f"Votre compte est debite de {facturation} {self.monnaie},"
                   f" dans le cadre de notre politique de retraits.")
             self._solde = self._solde - facturation
             self.afficher_solde()
