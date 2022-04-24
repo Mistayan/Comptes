@@ -15,34 +15,34 @@ from logging import debug, info, warning, error, basicConfig
 
 
 class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abstractmethod
-    """Un compte de base. Ne peut être instancié. (ABC)\n
+    """Un compte de base. Ne peut etre instancie. (ABC)\n
     Aucun argument n'est obligatoire
 
     :nom\n
-    Si aucun nom n'est donné, l'application accepte l'anonymat.
-    Pour des raisons éthiques, sera cependant obligatoire pour un compte courant.\n
+    Si aucun nom n'est donne, l'application accepte l'anonymat.
+    Pour des raisons ethiques, sera cependant obligatoire pour un compte courant.\n
 
     :num_compte\n
-    Si un numéro de compte est donné, on s'assurera qu'il corresponde au format légal, et qu'il n'existe pas déjà.
-    Si le numéro de compte donné existe, on chargera le compte dans l'interface.
-    Si aucun numéro de compte n'est renseigné (nouveau client), on en génèrera un (qui n'existe pas encore).
+    Si un numero de compte est donne, on s'assurera qu'il corresponde au format legal, et qu'il n'existe pas déjà.
+    Si le numero de compte donné existe, on chargera le compte dans l'interface.
+    Si aucun numero de compte n'est renseigne (nouveau client), on en generera un (qui n'existe pas encore).
 
     :solde_initial\n
-    Si aucune valeur ou une valeur erronée est renseignée, initialise à 0.
-    Si une valeur est renseignée, on initialisera à cette valeur.
+    Si aucune valeur ou une valeur erronee est renseignee, initialise a 0.
+    Si une valeur est renseignee, on initialisera a cette valeur.
 
     :code\n
-    Parce que nous ferions tout pour nos clients, on laisse la possibilité d'avoir une protection forte
-    Si aucun argument n'est renseigné, génère un code
+    Parce que nous ferions tout pour nos clients, on laisse la possibilite d'avoir une protection forte
+    Si aucun argument n'est renseigne, genere un code
 
     :extra_secu\n
-    Parce que la sécurité est importante pour nos clients, nous leur proposons une offre de sécurité renforcée.
-    Si activé, le code de compte sera en HEXADECIMAL d'une longueur de 6
+    Parce que la securite est importante pour nos clients, nous leur proposons une offre de securite renforcee.
+    Si active, le code de compte sera en HEXADECIMAL d'une longueur de 6
     """
 
     nom_proprietaire: str
     monnaie: str
-    _numero_compte: str = None  # On initialise à None, au cas où le num_compte fournit est invalide, ou déjà pris.
+    _numero_compte: str = None  # On initialise à None, au cas ou le num_compte fournit est invalide, ou deja pris.
     _solde: float
     __code: str
 
@@ -55,7 +55,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         self.monnaie = monnaie
         self.nom_proprietaire = "Anonymous" if nom is None else nom
 
-        ################################### Initialisation des variables privées ##################################
+        ################################### Initialisation des variables privees ##################################
         self._solde = solde_initial if solde_initial >= 0 else 0
 
         while self._numero_compte is None:
@@ -68,7 +68,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
             else:  # fonctionnement standard, hors init application.
                 self._numero_compte = num_compte
 
-        ################################### Initialisation des variables protégées ##################################
+        ################################### Initialisation des variables protegees ##################################
         if not force:
             if extra_secu:
                 self.__code = Generer.chaine_aleatoire(longueur=6, style=Message.HEXADECIMAL) if code == '' else code
@@ -77,9 +77,10 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         else:
             self.__code = code
         message_nouveau_compte = f"Le compte pour {self.nom_proprietaire}," \
-                                     f" avec le n° de compte: {self._numero_compte}," \
-                                     f"et le code secret: {self.__code}.\n vient d'etre créé.\n" \
-                                     f"Nous vous conseillons TRES FORTEMENT de les noter !"
+                                 f" avec le n° de compte: {self._numero_compte}," \
+                                 f"et le code secret: {self.__code}.\n vient d'etre cree.\n" \
+                                 f"Nous vous conseillons TRES FORTEMENT de les noter !"
+
         if 'new' in extra and extra['new'] is True:  # Ne doit etre vrai que lors de la creation d'un compte dans l'app
             print(message_nouveau_compte)
             self.__code = md5(str(self.__code).encode("utf-8")).hexdigest()
@@ -91,12 +92,12 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
     def retrait(self, valeur: float, autorisation=0) -> float:
         """
         Permet le retrait d'une somme demandée
-            Si une valeur non positive est rentrée (tentative de fraude), l'opération est enregistrée dans fraudes.txt
+            Si une valeur non positive est rentrée (tentative de fraude), l'operation est enregistree dans fraudes.txt
 
             Si l'utilisateur ne donne pas le bon code.... Pas de sous !
 
-            Si le solde est insuffisant, l'opération est refusée, avec un message d'erreur ;
-            Exception faite : Si un compte courant a une autorisation adaptée.
+            Si le solde est insuffisant, l'opération est refusee, avec un message d'erreur ;
+            Exception faite : Si un compte courant a une autorisation adaptee.
         """
 
         if isinstance(valeur, str):
@@ -122,13 +123,13 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
             return self._solde
         self._solde -= valeur
         info(f"Un retrait de {valeur}{self.monnaie} a été effectue")
-        Generer.historique(self._numero_compte, valeur)
+        Generer.historique(self._numero_compte, "retrait", valeur)
         self.afficher_solde()
         return self._solde
 
     def versement(self, valeur: float) -> float:
-        """ Permet l'ajout d'une somme demandée sur le compte
-            Si une valeur non numéraire est rentrée (tentative de fraude), l'opération est enregistrée dans fraudes.txt
+        """ Permet l'ajout d'une somme demandee sur le compte
+            Si une valeur non numeraire est rentree (tentative de fraude), l'operation est enregistree dans fraudes.txt
 
         """
         if isinstance(valeur, str):
@@ -143,7 +144,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
 
         self._solde += valeur
         info(f"Un depot de {valeur}{self.monnaie} a ete effectue")
-        Generer.historique(self._numero_compte, valeur)
+        Generer.historique(self._numero_compte, "versement", valeur)
         self.afficher_solde()
         return self._solde
 
@@ -158,18 +159,16 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
     ##########################################  Fonctions Spéciales  #################################################
     def connect(self, num, code) -> bool:
         """
-        Permet de se connecter sur un compté deja existant, a condition que les arguments fournis soient valides
+        Permet de se connecter sur un compte deja existant, a condition que les arguments fournis soient valides
         """
         if self.__code == code and self._numero_compte == num:
             return True
         return False
 
     def _recuperer_code(self) -> None:
-        """ Permet de récupérer un code oublié
+        """ Permet de recuperer un code oublie
         """
-        # TODO: gérer une interface externe permettant de vérifier si c'est "Manu, Le Vrai"
-
-        print(self.__code)  # Aller, on est gentil ;)
+        print(self.__code)  # Aller, on est gentil... OU PAS ! ;)
 
     ##########################################  Fonctions Magiques  ####################################################
 
@@ -185,59 +184,13 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         """
         return self.retrait(num)
 
-    ##########################################  COMPARAISONS  ####################################################
-    def __eq__(self, autre):
-        """ '==' permet:
-                la comparaison de deux comptes pour savoir si le propriétaire est le même
-                la comparaison à un nombre
-        """
-        # TODO: ajouter une sécurité supplémentaire pour assignation.
-        if isinstance(autre, int) or isinstance(autre, float):
-            return self._solde == autre
-        elif self.nom_proprietaire == autre.nom_proprietaire:
-            return True
-
-        raise TypeError(f"assignation de {type(autre)} à {type(Compte)} impossible.\n\
-                                Compte / int / float, acceptés)")
-
-    def __gt__(self, other) -> int:  # int plus rapide que bool <- une classe en moins à instancier
-        """
-        '>' permet la comparaison du solde avec un nombre (int ou float)
-        """
-        if isinstance(int, other) or isinstance(float, other):
-            return self._solde > other
-        raise TypeError
-
-    def __ge__(self, other) -> int:  # int plus rapide que bool <- une classe en moins à instancier
-        """
-        permet la comparaison via '>=' du solde avec un nombre (int ou float)
-        """
-        if isinstance(int, other) or isinstance(float, other):
-            return self._solde > other
-        raise TypeError
-
-    def __lt__(self, other) -> int:  # int plus rapide que bool <- une classe en moins à instancier
-        """
-        permet la comparaison via '<' du solde avec un nombre (int ou float)
-        """
-        if isinstance(int, other) or isinstance(float, other):
-            return self._solde > other
-        raise TypeError
-
-    def __le__(self, other) -> int:  # int plus rapide que bool <- une classe en moins à instancier
-        """
-        permet la comparaison via '<=' du solde avec un nombre (int ou float)
-        """
-        if isinstance(int, other) or isinstance(float, other):
-            return self._solde > other
-        raise ValueError()
-
+    ##########################################  CASTINGS  ####################################################
     def __str__(self):
         """
-        Renvoie les informations du compte en clair (sauf le mdp, qui est hashé), préformaté pour JSON,
-        dans le cadre d'une intégration future avec interfacing
+        Renvoie les informations du compte en clair (sauf le mdp, qui est hashe), préformaté pour JSON,
+        dans le cadre d'une integration future avec interfacing
 
-        /!\\ Remarque /!\\: Ne pas oublier de récupérer les __str__ du child pour finir la chaine.
+        /!\\ Remarque /!\\: Ne pas oublier de récuperer les __str__ du child pour finir la chaine.
          Sinon, fermer avec "}"
         """
         cat_string = "{" \
