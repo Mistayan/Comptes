@@ -60,9 +60,11 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
 
         while self._numero_compte is None:
             if not force:  # Force n'est utile que pour l'init de l'application.
-                un_num = Securite.dispo(num_compte)
-                if un_num is False or type(un_num) is str:
+                valeur_verif = Securite.dispo(num_compte)
+                if valeur_verif is False or type(valeur_verif) is str:
                     num_compte = Generer.chaine_aleatoire(longueur=10, style=Message.DIGITS)
+                elif valeur_verif is True:  # fonctionnement standard, hors init application.
+                    self._numero_compte = num_compte
             else:  # fonctionnement standard, hors init application.
                 self._numero_compte = num_compte
 
@@ -74,12 +76,13 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
                 self.__code = Generer.chaine_aleatoire(longueur=4, style=Message.DIGITS)
         else:
             self.__code = code
-        if Message.DEBUG:
-            message_nouveau_compte = f"Un compte pour {self.nom_proprietaire}," \
+        message_nouveau_compte = f"Le compte pour {self.nom_proprietaire}," \
                                      f" avec le n° de compte: {self._numero_compte}," \
-                                     f"avec un solde initial de {self._solde}{self.monnaie}," \
-                                     f"et le code secret: {self.__code}.\n vient d'etre créé."
-            info(message_nouveau_compte)
+                                     f"et le code secret: {self.__code}.\n vient d'etre créé.\n" \
+                                     f"Nous vous conseillons TRES FORTEMENT de les noter !"
+        if 'new' in extra and extra['new'] is True:  # Ne doit etre vrai que lors de la creation d'un compte dans l'app
+            print(message_nouveau_compte)
+            self.__code = md5(str(self.__code).encode("utf-8")).hexdigest()
 
     ##########################################  Fonctions Privées  #####################################################
 
