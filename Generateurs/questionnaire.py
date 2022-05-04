@@ -1,11 +1,13 @@
-# from abc import ABC  # Abstractors
-import re
+#! encoding:utf-8
+""""
+Editeur: Mistayan
+Projet: Comptes-Bancaires
+"""
+import messages
+from comptes import Compte, CompteCourant, CompteEpargne
 
-import Message
-from Comptes import Compte, CompteCourant, CompteEpargne
 
-
-##########################################  Classe  #####################################################
+##########################################  Classe  #################################################
 
 
 class Champ(object):
@@ -28,4 +30,4 @@ class Questionnaire(Compte):
 
 
 if __name__ == '__main__':
-    print(Message.EXECUTE)
+    print(messages.EXECUTE)
