@@ -140,9 +140,8 @@ def ask_parano():
     parano = None
     clear()
     while parano is None:
-        parano = input(
-            "mode securite etendu ? (ceci permet d'utiliser tout type de characters pour le code) [O/n]")
-        parano = input("mode securite etendu ? (ceci permet d'utiliser tout type de characters pour le code) [O/n]")
+        parano = input("mode securite etendu ?"
+                       " (ceci permet d'utiliser tout type de characters pour le code) [O/n]")
         if re.match(r"^[yYoO]$", parano):
             return True
         elif re.match(r"^[nN]$", parano):
