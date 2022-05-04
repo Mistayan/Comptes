@@ -71,7 +71,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
             if not force:  # Force n'est utile que pour l'init de l'application.
                 valeur_verif = Securite.dispo(num_compte)
                 if valeur_verif is False or isinstance(valeur_verif, str):
-                    num_compte = Gen.chaine_aleatoire(longueur=10, style=Msg.DIGITS())
+                    num_compte = Gen.chaine_aleatoire(longueur=10, style=Msg.digits())
                 elif valeur_verif is True:  # fonctionnement standard, hors init application.
                     self._numero_compte = num_compte
             else:  # fonctionnement standard, hors init application.()
@@ -81,9 +81,9 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         if not force:
             if extra_secu:
                 self.__code = code if code != '' else \
-                    Gen.chaine_aleatoire(longueur=6, style=Msg.HEXADECIMAL())
+                    Gen.chaine_aleatoire(longueur=6, style=Msg.hexa())
             else:
-                self.__code = Gen.chaine_aleatoire(longueur=4, style=Msg.DIGITS())
+                self.__code = Gen.chaine_aleatoire(longueur=4, style=Msg.digits())
         else:
             self.__code = code
         message_nouveau_compte = f"Le compte pour {self.nom_proprietaire}," \

@@ -68,15 +68,10 @@ AUREVOIR_MSG = "Ce fut un plaisir de vous voir, a bientot"
 BRAIN_FUCK = "[]><.,+-"
 
 
-def DIGITS():
-    return "0123456789"
 
-def HEXA():
-    return HEXADECIMAL()
-
-def BRAIN_FUCK():
-    return BRAIN_FUCK
-
-
-def HEXADECIMAL():
+#Alias
+def hexa():
     return HEXADECIMAL
+
+def digits():
+    return DIGITS
