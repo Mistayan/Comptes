@@ -1,17 +1,18 @@
-#!- coding: latin-1 -!#
-
-##########################################  IMPORTS  #####################################################
+#! encoding:utf-8 --!#
+""""
+Editeur: Mistayan
+Projet: Comptes-Bancaires
+"""
+##########################################  IMPORTS  ###############################################
 import Generateurs as Gen
-import json
-from json import JSONDecodeError
 
 
-##########################################  Definition classe  #####################################################
+##########################################  Definition classe  #####################################
 
 
 def dispo(compte: str = None, code: str = None, ):
     """
-        Vérifie la disponibilite d'un numero de compte (UID)
+        Verifie la disponibilite d'un numero de compte (UID)
 
          Si le numero n'est pas au format valide, retourne False
 
@@ -41,7 +42,7 @@ def scan_file(numero_en_str: str = None):
      Cherche la chaine de caracteres dans le fichier de comptes
 
     :return
-     True si présent
+     True si present
      False si absent
     """
 
@@ -58,9 +59,9 @@ def scan_file(numero_en_str: str = None):
 def verif_format(dict_compte):
     """
     arg: un dictionnaire de comptes
-    Verifie l'intégrité du compte récupéré dans un fichier techniquement accessible à l'utilisateur.
+    Verifie l'integrite du compte recupere dans un fichier techniquement accessible a l'utilisateur.
 
-    Retourne un compte du type voulu si les données sont valides, sinon False.
+    Retourne un compte du type voulu si les donnees sont valides, sinon False.
     """
     champs_compte = ["nom", "type_compte", "solde", "num_compte", "code", "monnaie"]
     champs_compte_courant = ["autorisation", "agios"]
@@ -84,13 +85,5 @@ def verif_format(dict_compte):
                 return False  # Un des champs n'existe pas.
         return True  # Les champs sont 'valides'
 
-    return False  # Les champs sont présents ET valides
+    return False  # Les champs sont presents ET valides
 
-##########################################  Fonctions Partagées  ###################################################
-
-##########################################  Fonctions Privées  #####################################################
-
-
-##########################################  Fonctions Spéciales  ####################################################
-
-##########################################  Fonctions Magiques  ####################################################
