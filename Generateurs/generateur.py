@@ -46,14 +46,14 @@ def chaine_aleatoire(longueur: int, style: str) -> str:
     return ''.join(random.choice(style) for _ in range(longueur))
 
 
-
-
-def my_open(fichier: str, mode: str = 'r', encoding: str = "utf-8"):
+def my_open(fichier: str, mode: str = 'r', encoding: str = "utf-8", rec: int = 0):
     """
         Permet d'ouvrir un fichier avec le mode voulu.
         Si le fichier n'existe pas, de le creer, et de l'ouvrir avec le mode voulu.
     """
-    if not re.search(r":[\\]|[/]", fichier):  # Path relatif? Petit regex bien pratique.
+    if rec == 5:
+        return None
+    if not re.search(r"[A-Z]:[\\]|[/]", fichier):  # Path relatif? Petit regex bien pratique.
         dossier_actuel = os.path.abspath('.') + "\\"  # On ajoute le path complet.
     else:
         dossier_actuel = ""
@@ -61,9 +61,9 @@ def my_open(fichier: str, mode: str = 'r', encoding: str = "utf-8"):
         fp = open(f"{dossier_actuel}{fichier}", mode=mode, encoding=encoding)
         return fp if fp else None
     except FileNotFoundError as e:
-        fp = open(fichier, 'w')  # Du coup, on cree le fichier.
+        fp = my_open(fichier, 'w', encoding, rec + 1)  # Du coup, on cree le fichier.
         fp.close()  # Pas le bon mode, on ferme.
-    return my_open(fichier, mode=mode, encoding=encoding)  # Verification recursive.
+    return my_open(fichier, mode, encoding, rec + 1)  # Verification recursive.
 
 
 def fraude(compte: str, func: str, arg: str = "") -> None:
