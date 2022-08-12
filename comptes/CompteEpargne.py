@@ -58,9 +58,9 @@ class CompteEpargne(Compte):
         return self._solde
 
     def __str__(self):
-        return ' '.join([super().__str__(), "Compte Epargne"])
+        return str(self.__to_json__())
 
-    def __to_json__(self):
+    def __to_json__(self) -> dict:
         """
         Permet de renvoyer les informations du compte au format json
         """

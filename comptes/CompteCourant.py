@@ -88,7 +88,7 @@ class CompteCourant(Compte):
             print(f"Votre compte est debite de {facturation} {self.monnaie},"
                   f" dans le cadre de notre politique de retraits.")
             self._solde = solde - facturation
-            self.afficher_solde()
+            # self.afficher_solde()
         return self._solde
 
     #
@@ -99,27 +99,27 @@ class CompteCourant(Compte):
         Permet de renvoyer les informations du compte au format str(json)
         """
         # Mais on appelle quand meme maman pour recuperer ses informations.
-        infos_parent = super().__str__()
-        infos_enfant = f"\"autorisation\":\"{self._autorisation_decouvert}\"," \
-                       f"\"interets\":\"{self._pourcentage_agios}\"," \
-                       f"\"pouce\":\"{self.__coup_de_pouce}\"" \
-                       "}"
-        return infos_parent + infos_enfant
+        # infos_parent = super().__str__()
+        # infos_enfant = f"\"autorisation\":\"{self._autorisation_decouvert}\"," \
+        #                f"\"interets\":\"{self._pourcentage_agios}\"," \
+        #                f"\"pouce\":\"{self.__coup_de_pouce}\"" \
+        #                "}"
+        return str(self.__to_json__)
 
-    def __to_json__(self):
+    def __to_json__(self) -> dict:
         """
         Permet de renvoyer les informations du compte au format json
         """
         infos_compte = {
             "nom": self.nom_proprietaire,
-            "type_compte": "Epargne",
+            "type_compte": "Courant",
             "autorisation": self.get_autorisation(),
-            "interets": self.get_interets(),
+            "agios": self.get_agios(),
             "solde": self.get_solde(),
             "num_compte": self.get_num(),
             "code": self._recuperer_code(),
             "monnaie": self.monnaie,
-            "pouce": self.pouce,
+            "pouce": self.__coup_de_pouce,
         }
         return infos_compte
 
