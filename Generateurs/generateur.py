@@ -109,12 +109,8 @@ def json_en_compte(json: dict) -> any:
     return None
 
 
-def compte_en_json(compte):
-    return compte.__repr__()
-
-
-def compte_en_json(compte: CompteEpargne):
-    return compte.__repr__()
+def compte_en_json(compte: CompteEpargne | CompteCourant):
+    return compte.__to_json__()
 
 
 ##########################################  Fonction test_module  ##################################

@@ -12,36 +12,27 @@ from .Compte import Compte
 
 
 class CompteEpargne(Compte):
-    """
-    Instancie un CompteEpargne (instance de Compte).
-
-    """
+    """ Instancie un CompteEpargne (instance de Compte). """
     _pourcentage_interets: float
 
     ##########################################  Class Init  ########################################
     def __init__(self, interets: float = 5, **kwargs):
         super().__init__(**kwargs)
         if interets < 5 or interets > 5:
-            interets = 1 + 5 / 100
-        self._pourcentage_interets = interets
-        if message.DEBUG:
-            print(
-                f"Celui-ci est de type Compte Epargne, avec un taux d'interets"
-                f" annuel de {interets}{self.monnaie}"
-            )
+            interets = 5
+        self._pourcentage_interets = 1 + interets / 100
+        print(f"Celui-ci est de type Compte Epargne,"
+              f" avec un taux d'interets de {round(interets, 2)}%")
 
     ##########################################  GETTERS  ########################################
     def get_interets(self):
         return self._pourcentage_interets
 
-    ##########################################  SETTERS  ########################################
-
     ##########################################  Methodes  ##########################################
     def versement(self, valeur: float):  # Override, pour appliquer les taux d'intérêts
         """
             Permet d'ajouter de l'argent sur le compte.
-          :return :
-          retourne le nouveau solde.
+        Return : le nouveau solde.
         """
         super().versement(valeur=valeur)
         return self.appliquer_interets()

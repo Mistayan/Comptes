@@ -7,7 +7,7 @@ from string import digits as DIGITS
 from string import hexdigits as HEXADECIMAL
 
 DEBUG = False
-NO_CODE = False
+NO_CODE = True  # vérification une fois connecté, à chaque action utilisateur ?
 
 NOM_BANQUE = "Anno Banque"
 MESSAGE_BIENVENUE = f"Bonjour, et bienvenue chez {NOM_BANQUE}.\n" \
@@ -21,7 +21,7 @@ EXPLICATION_COMPTE_COURANT = "Ce compte vous permet d'avoir un decouvert autoris
                              " cet argent, vous serez deduit d'un montant supplementaire," \
                              " conformement aux lois en vigueur"
 
-EXPLICATION_COMPTE_EPARGNE = "Ce compte vous permet de gagner de l'argent."\
+EXPLICATION_COMPTE_EPARGNE = "Ce compte vous permet de gagner de l'argent." \
                              " Ce taux est susceptible d'evoluer." \
                              " Vous en serez notifie a l'avance via votre" \
                              " application."
@@ -68,10 +68,10 @@ AUREVOIR_MSG = "Ce fut un plaisir de vous voir, a bientot"
 BRAIN_FUCK = "[]><.,+-"
 
 
-
-#Alias
+# Alias
 def hexa():
     return HEXADECIMAL
+
 
 def digits():
     return DIGITS

@@ -49,7 +49,7 @@ def scan_file(numero_en_str: str = None):
     f = Gen.my_open("comptes.json", "r+")
     for line in f.read():
         if numero_en_str in line:
-            print("duplicate found")
+            # print("duplicate found")
             f.close()
             return True
     f.close()

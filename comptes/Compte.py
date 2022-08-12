@@ -94,19 +94,16 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         if 'new' in extra and extra['new'] is True:
             # Ne doit etre vrai que lors de la creation d'un compte dans l'app
             print(message_nouveau_compte)
-            self.__code = md5(str(self.__code).encode("utf-8")).hexdigest()
+            self.__code = Gen.Encrypt(self.__code).__str__()
 
     ##########################################  Fonctions Privées  #################################
     def __demander_code(self):
-        if not Msg.NO_CODE:
-            code = input(Msg.ASK_CODE)
-            if md5(str(code).encode("utf-8")).hexdigest() == self.__code:
-                return True  # Code OK
-            Gen.fraude(self._numero_compte, "code_invalide", code)
-            info("Code Faux !")
-            return False
-        else:  # NO_CODE actif
-            return True
+        code = input(Msg.ASK_CODE)
+        if md5(str(code).encode("utf-8")).hexdigest() == self.__code:
+            return True  # Code OK
+        Gen.fraude(self._numero_compte, "code_invalide", code)
+        info("Code Faux !")
+        return False
 
     ##########################################  Fonctions Partagées  ###############################
 
@@ -114,7 +111,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         """
         Permet le retrait d'une somme demandée
             Si une valeur non positive est rentree (tentative de fraude),
-             l'operation est enregistree dans fraudes.txt
+             l'operation est enregistree dans les fraudes
 
             Si l'utilisateur ne donne pas le bon code.... Pas de sous !
 
@@ -125,24 +122,24 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         if isinstance(valeur, str):
             try:
                 valeur = float(valeur)
-            except:
+            except ValueError:
                 Gen.fraude(compte=self._numero_compte, func="retrait", arg=valeur)
-                print("Error")
-        if not isinstance(valeur, (int, float)):
-            print(Msg.ERREUR_NOMBRES)
-            return self._solde
+                print(Msg.ERREUR_NOMBRES)
+            finally:
+                if not isinstance(valeur, (int, float)):
+                    print(Msg.ERREUR_NOMBRES)
+                    return self._solde
 
         # En mode NO_CODE, on ne demandera pas le code,
-        # sauf si vous désactivez l'option (messages/static_strings.py).
         # Pratique pour le debug.... Ou autre.
-        if self.__demander_code() is True:
+        if Msg.NO_CODE or self.__demander_code() is True:
             if self._solde + autorisation < valeur:
-                print("Solde insuffisant!")
                 return self._solde
             self._solde -= valeur
-            print(f"Un retrait de {valeur}{self.monnaie} a ete effectue")
+            # print(f"Un retrait de {valeur}{self.monnaie} a ete effectue")
+
             Gen.historique(self._numero_compte, "retrait", valeur)
-        self.afficher_solde()
+        # self.afficher_solde()
         return self._solde
 
     def versement(self, valeur: float) -> float:
@@ -153,18 +150,19 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         if isinstance(valeur, str):
             try:
                 valeur = float(valeur)
-            except:
+            except ValueError:
                 Gen.fraude(compte=self._numero_compte, func="retrait", arg=valeur)
-                print("Error")
+                raise ValueError(Msg.ERREUR_NOMBRES)
         if not isinstance(valeur, (int, float)):
             raise ValueError(Msg.ERREUR_NOMBRES)
 
         valeur = abs(valeur)  # esquiver
 
         self._solde += valeur
-        info(f"Un depot de {valeur}{self.monnaie} a ete effectue")
+        # info(f"Un depot de {valeur}{self.monnaie} a ete effectue")
         Gen.historique(self._numero_compte, "versement", valeur)
-        self.afficher_solde()
+
+        # self.afficher_solde()
         return self._solde
 
     def afficher_solde(self) -> None:
@@ -180,33 +178,45 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         """ Retourne le numero du compte. """
         return self._numero_compte
 
-    ##########################################  SETTERS  ###########################################
-
     ##########################################  Fonctions Spéciales  ###############################
-    def connect(self, num, code) -> bool:
+    def connect(self, num, code, db=False) -> bool:
         """
         Permet de se connecter sur un compte deja existant,
          a condition que les arguments fournis soient valides
         """
+        if db:
+            return self.connect_db(num, code)
         return True if self.__code == code and self._numero_compte == num else False
+
+    def connect_db(self, num, code):
+        mycollection = self.__connect_db()
+        if mycollection:
+            cursor = mycollection.find_one({"num_compte": self.get_num()})
+            cur_dict = dict(cursor)
+            return True if cur_dict["code"] == code and cur_dict["num_compte"] == num else False
+        return False
 
     def _recuperer_code(self) -> None:
         """ Permet de recuperer un code oublie
         """
-        print(self.__code)  # Aller, on est gentil... OU PAS ! ;)
+        # print(self.__code)  # Aller, on est gentil... OU PAS ! ;)
+        return self.__code
+
+    def __connect_db(self):
+        from pymongo import MongoClient
+        client = MongoClient('localhost', 27017)
+        return client.comptes.comptes
 
     ##########################################  Fonctions Magiques  ################################
 
     ##########################################  OPERATIONS  ########################################
 
     def __add__(self, num):
-        """ Permet un versement via '+'  avec un nombre (int ou float).
-        """
+        """ Permet un versement via '+'  avec un nombre (int ou float)."""
         return self.versement(num)
 
     def __sub__(self, num):
-        """ Permet le retrait via '-'  avec un nombre (int ou float).
-        """
+        """ Permet le retrait via '-'  avec un nombre (int ou float)."""
         return self.retrait(num)
 
     ##########################################  CASTINGS  ##########################################

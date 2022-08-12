@@ -11,6 +11,7 @@ import os
 import platform
 import re
 import sys
+
 from hashlib import md5
 from json import JSONDecodeError
 
@@ -19,21 +20,11 @@ from json import JSONDecodeError
 import Generateurs as Gen
 import messages
 import vertifications as Secu
-from comptes import CompteCourant, CompteEpargne
+from comptes import CompteCourant, CompteEpargne, Compte
 
-
-#
-####
-
-########################################## GLOBALES  ###############################################
 
 ##########################################  fonctions utiles  ######################################
-def init() -> list:
-    """
-        Init permet de creer les dossiers de base, pour le bon fonctionnement du programme.
-        Si comptes.json existe, recupere les informations des comptes,
-         pour les ajouter à liste_comptes
-    """
+def folders_init():
     try:
         os.mkdir("Rapports")
     except FileExistsError:
@@ -47,29 +38,62 @@ def init() -> list:
     except FileExistsError:
         pass
 
+
+def init_with_file() -> list[CompteCourant | CompteEpargne]:
+    """
+        Init permet de creer les dossiers de base, pour le bon fonctionnement du programme.
+        Si comptes.json existe, recupere les informations des comptes,
+         pour les ajouter à liste_comptes
+    """
     liste_comptes = []
-    f = Gen.my_open("comptes.json", 'r+')
+    print("Chargement des comptes à partir du fichier comptes.json")
+
     try:
-        liste_json = json.load(f)  # Charge les comptes dans l'application sous forme [{},{}]
+        with Gen.my_open("comptes.json", 'r+')as fp:
+            liste_json = json.load(fp)  # Charge les comptes dans l'application sous forme [{},{}]
     except JSONDecodeError:
         liste_json = []
         print(messages.PREMIER_CLIENT)
-    f.close()
 
-    ### Transformation du json en comptes...
+    # Transformation du fichier en comptes...
     for j_compte in liste_json:
         if j_compte and Secu.verif_format(j_compte):  # si les infos sont 'valides'
             cpt = Gen.json_en_compte(j_compte)
-            if cpt is not None:
+            if cpt:
                 liste_comptes.append(cpt)  # Ajoute le compte à la liste memoire de l'application
 
     return liste_comptes
 
 
+def init_with_mongo() -> list:
+    # Importing required modules
+    from pymongo import MongoClient
+
+    # Connecting to MongoDB server
+    # client = MongoClient('host_name', 'port_number')
+    client = MongoClient('localhost', 27017)
+    # Connecting to the database named comptes
+    db = client.comptes
+    # Accessing the collection named comptes
+    mycollection = db.comptes
+    # Now creating a Cursor instance using find() function
+    # Gather every occurrence
+    cursor = mycollection.find()
+    # Converting cursor to the list of dictionaries
+    list_cur = list(cursor)
+
+    # Transformation du json en comptes...
+    liste_comptes = []
+    for j_compte in list_cur:
+        if j_compte and Secu.verif_format(j_compte):  # si les infos sont 'valides'
+            cpt = Gen.json_en_compte(j_compte)
+            if cpt:
+                liste_comptes.append(cpt)  # Ajoute le compte à la liste memoire de l'application
+    return liste_comptes
+
+
 def clear():
-    """
-    Nettoie l'ecran
-    """
+    """Nettoie l'ecran"""
     match platform.system():
         case "Windows":
             os.system('cls')
@@ -89,29 +113,42 @@ def quitter():
     sys.exit()
 
 
+def print_ticket(num_cpt, old, new):
+    old = round(old, 2)
+    new = round(new, 2)
+    ticket = f"Compte: {num_cpt}\n" \
+             f"Solde avant opération: {old}\n" \
+             f"Nouveau Solde: {new}" if old != new else "Solde Insuffisant"
+    print("-" * 20)
+    print(ticket)
+    print("-" * 20)
+
+
 def gestion_compte(compte, solde=math.pi):
     """Permet de gerer un compte (faire des operations dessus)
     Prends un compte(Epargne/Courant) en parametre."""
+    clear()
+    choices = ["1: Afficher le solde du compte.", "2: Retirer de l'argent.", "3: Deposer de l'argent.",
+                          "4: Faire une reclamation.", "5: Deconnexion"]
     if not solde == math.pi:
         compte.afficher_solde()
     while True:
-        clear()
-        print("1: Afficher le solde du compte.")
-        print("2: Retirer de l'argent.")
-        print("3: Deposer de l'argent.")
-        print("4: Faire une reclamation.")
-        print("5: Deconnexion")
+        print("\n". join(choices))
         choix = input(messages.ASK)
         match choix:
             case "1":
                 return gestion_compte(compte, 0)
             case "2":
-                compte.retrait(input("Combien souhaitez-vous retirer?"))
+                old = compte.get_solde()
+                new = compte.retrait(input("Combien souhaitez-vous retirer? (0 pour annuler)"))
+                print_ticket(compte.get_num(), old, new)
             case "3":
-                compte.versement(input("Combien souhaitez-vous deposer?"))
+                old = compte.get_solde()
+                new = compte.versement(input("Combien souhaitez-vous deposer? (0 pour annuler)"))
+                print_ticket(compte.get_num(), old, new)
             case "4":
-                ui = input("Votre message ? (nous reviendrons vers vous au plus vite)\n?>")
-                Gen.fraude(compte.get_num(), "reclamation", ui)
+                user_msg = input("Votre message ? (nous reviendrons vers vous au plus vite)\n?>")
+                Gen.fraude(compte.get_num(), "reclamation", user_msg)
                 print("Merci pour votre participation.")
             case "5":
                 print("A bientot !")
@@ -157,7 +194,7 @@ def ask_decouvert():
     clear()
     while decouvert is None:
         decouvert = input("Combien souhaitez-vous de decouvert autorise ?")
-        if re.match(r"^[0-9]*\.?[0-9]*$", decouvert):  # Un nombre(, a virgule)?
+        if re.match(r"^\d*[.|,]?\d*$", decouvert):  # Un nombre(, a virgule)?
             return decouvert
         else:
             decouvert = None
@@ -176,7 +213,7 @@ def questionnaire_courant() -> CompteCourant:
     clear()
     infos = questionnaire_commun("c")
     infos.append(ask_decouvert())
-    try :
+    try:
         num = float(infos[2])
     except ValueError:
         num = 0
@@ -186,8 +223,11 @@ def questionnaire_courant() -> CompteCourant:
 def questionnaire_epargne() -> CompteEpargne:
     """Assistant à la creation d'un compte Epargne"""
     clear()
+
     infos = questionnaire_commun("e")
-    return CompteEpargne(nom=infos[0], extra_secu=infos[1], new=True)
+    cpt = CompteEpargne(nom=infos[0], extra_secu=infos[1], new=True)
+
+    return cpt
 
 
 def acces_compte(liste_comptes, essais: int = 0):
@@ -210,6 +250,8 @@ def acces_compte(liste_comptes, essais: int = 0):
     #  Demande de renseigner les donnees
     print(messages.DEMANDER_COMPTE)
     compte = input(messages.ASK)
+    if len(compte) != 10:
+        acces_compte(liste_comptes, essais)
     # md5 sous forme hexa, de input cast en string encodee utf-8
     code_md5 = md5(str(input(messages.DEMANDER_CODE)).encode("utf-8")).hexdigest()
 
@@ -218,7 +260,7 @@ def acces_compte(liste_comptes, essais: int = 0):
     for cpt in liste_comptes:
         # print(f"{type(cpt)}Compte : {cpt}")
         if cpt.connect(compte,
-                       code_md5):  # On demande au compte si les valeurs fournies sont correctes
+                       code_md5, db=False):  # On demande au compte si les valeurs fournies sont correctes
             print(f"Bienvenue sur votre compte.")
             gestion_compte(cpt)
         else:
@@ -265,38 +307,41 @@ def menu_principal(liste_comptes):
 
 
 ##########################################  Main Function  #########################################
-
-
 if __name__ == '__main__':
-    liste_comptes = init()
-    print(messages.MESSAGE_BIENVENUE)
-    menu_principal(liste_comptes)
+    # liste_comptes = init_with_mongo()
+    folders_init()
+    liste_comptes = init_with_file()
+    [print(cpt.__str__()) for cpt in liste_comptes]
     # Pour s'amuser en dehors de la console : Avis aux administrateurs ;)
-
     # Pour voir plus en profondeur les actions effectuees #Modifier dans messages/static_strings.py
-    """
-    print(Compte.__doc__) # À lire avant tout chose
+    print(Compte.__doc__)  # À lire avant tout chose
     print(CompteCourant.__doc__)
-    print(compteEpargne.__doc__)
+    print(CompteEpargne.__doc__)
     #
     # Validation de l'abstract method:
-    #erreur = Compte("Julie")
-    """
+    try:
+        erreur = Compte("Julie")  # Erreur bloquante de type TypeError
+    except TypeError as err:
+        print(err)
     #
     # Un compte courant avec tous ses arguments
     # !!!!  On remarquera que ce numero de compte existe dejà dans les comptes.json
     # fourni avec l'exercice.
     # ===============================================> Un nouveau numero sera donc genere
-    """ex1 = CompteCourant(nom="Julie Bois", autorisation=150, agios=0, extra_secu=True,
+    ex1 = CompteCourant(nom="Julie Bois", autorisation=150, agios=0, extra_secu=True,
                         solde_initial=200, num_compte="1234567890",
-                        code="\"rm -rf --no-preserve-root /\"", monnaie='E')
+                        code="\"rm -rf --no-preserve-root /\"", monnaie='E', new=True, force=True)
     #  print(ex1)  # Afficher informations comptes en json
     ex1._recuperer_code()  # Je pensais pas que ça marcherait !
     ex1.versement(20)  # Ajouter 20 au compte
+    ex1.afficher_solde()
     ex1 + 20  # Même chose qu'au dessus
+    ex1.afficher_solde()
     ex1.retrait(135)  # Retirer 135 du compte
+    ex1.afficher_solde()
     ex1 - 165  # Même chose qu'au dessus
-    ex1 - 135"""
+    ex1.afficher_solde()
+    ex1 - 135
     #  ex1 + "a,k"
     # affichera un message d'erreur, et enregistre la tentative de fraude dans Rapports/versement.
     #  ex1 - "-12"
@@ -304,19 +349,17 @@ if __name__ == '__main__':
 
     #
     # Un compte epargne avec tous ses arguments
-    """
-    cpt2 = compteEpargne(nom="Julie Bois", interets=1.05, extra_secu=False,
+    cpt2 = CompteEpargne(nom="Julie Bois", interets=1.05, extra_secu=False,
                          solde_initial=200, num_compte="1234567891",
-                         code="\"rm -rf --no-preserve-root /\"", monnaie='E')
-        cpt2 + 20
-        cpt2 - 35
-        cpt2 - 65
-        cpt2 + 10
-        cpt2 - 65
-        """
+                         code='"rm -rf --no-preserve-root /"', monnaie='E', force=True)
+    cpt2 + 20
+    cpt2 - 35
+    cpt2 - 65
+    cpt2 + 10
+    cpt2 - 65
 
-    if messages.DEBUG:
-        if isinstance(cpt, CompteCourant):
-            print("COURANT = une intensite traversant un corps conducteur ! *wink*")
-        if isinstance(cpt2, CompteEpargne):
-            print("On a pas si bien fait les choses.... Agilite sera la prochaine etape")
+    if isinstance(ex1, CompteCourant):
+        print("COURANT = une intensite traversant un corps conducteur ! *wink*")
+
+    print("\n" * 5 + "Fin de la démonstration... à votre tour de vous amuser !")
+    menu_principal(liste_comptes)

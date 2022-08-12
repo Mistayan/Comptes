@@ -3,8 +3,8 @@
 Editeur: Mistayan
 Projet: Comptes-Bancaires
 """
-from comptes import Compte
 ##########################################  IMPORTS  ###############################################
+from comptes import Compte
 from messages import static_strings as msg
 from vertifications import ErreurUtilisateurNonDefini
 
@@ -13,7 +13,7 @@ from vertifications import ErreurUtilisateurNonDefini
 #
 class CompteCourant(Compte):
     """
-        Cree un compte avec des possibilites de retraits sous le seuil de 0.0.
+        Cree un compte Courant avec des possibilites de retraits sous le seuil de 0.0.
         A chaque retrait, si l'utilisateur possede un solde negatif :
          on apposera des frais equivalents aux taux en vigueur pour ce compte.
 
@@ -42,9 +42,9 @@ class CompteCourant(Compte):
             agios = 5
         self._pourcentage_agios = agios / 100
 
-        # print(f"Ce compte est de type CompteCourant, avec autorisation de decouvert de"
-        #      f" {self._autorisation_decouvert}{self.monnaie}, "
-        #      f"et un taux d'interets de {self._pourcentage_agios}%")
+        print(f"Ce compte est de type CompteCourant, avec autorisation de decouvert de"
+              f" {self._autorisation_decouvert}{self.monnaie}, "
+              f"et un taux d'interets de {self._pourcentage_agios * 100}%")
 
     ########################################## GETTERS  #################################
     def get_agios(self):
@@ -63,6 +63,8 @@ class CompteCourant(Compte):
         Et enfin, nous appliquerons des agios si l'utilisateur etait a 0 ou moins avant son retrait
         (ou sa tentative de retrait).
         """
+        if not valeur:
+            return self.get_solde()
         super().retrait(valeur, self.get_autorisation())
         self.appliquer_agios()
         return self.get_solde()
@@ -104,7 +106,7 @@ class CompteCourant(Compte):
         #                f"\"interets\":\"{self._pourcentage_agios}\"," \
         #                f"\"pouce\":\"{self.__coup_de_pouce}\"" \
         #                "}"
-        return str(self.__to_json__)
+        return str(self.__to_json__())
 
     def __to_json__(self) -> dict:
         """
