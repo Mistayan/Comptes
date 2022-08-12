@@ -6,21 +6,15 @@ Projet: Comptes-Bancaires
 ##########################################  IMPORTS  ###############################################
 
 import os
-import random
+import secrets
 import re
 from datetime import datetime
-
 import messages.static_strings as Message
 import vertifications as Verif
 from comptes import CompteCourant, CompteEpargne
 
 
 ##########################################  SNIPPETS  ##############################################
-
-
-##########################################  SNIPPETS  ##############################################
-
-
 def chaine_aleatoire(longueur: int, style: str) -> str:
     """
         Genere une chaine de longueur voulue, contenant les characters de style voulu, selectionnes
@@ -37,13 +31,13 @@ def chaine_aleatoire(longueur: int, style: str) -> str:
         def _choix_aleatoire():
             for _ in range(longueur):  # _ veut dire 'pas important'
                 # Yield est un return a memoire. Retourne un generateur iterable.
-                yield random.choice(style)
+                yield secrets.choice(style)
             # ^^^^^^^^ Au prochain appel de la fonction, reprendra ici.
 
         ret = ''.join(elem for elem in _choix_aleatoire())
         return ret
         """
-    return ''.join(random.choice(style) for _ in range(longueur))
+    return ''.join(secrets.choice(style) for _ in range(longueur))
 
 
 def my_open(fichier: str, mode: str = 'r', encoding: str = "utf-8", rec: int = 0):
@@ -70,9 +64,9 @@ def fraude(compte: str, func: str, arg: str = "") -> None:
     """Enregistre dans le fichier approprie:
     la fraude/tentative de retrait sans solde/... constatee
     Cela fonctionne aussi pour les reclamations clients.
-    :param compte => Le compte mis en defaut, ou reclamant.
-           func => Quelle action l'utilisateur essayait a ce moment.
-           arg => La chaine qui aura fait l'erreur.
+    :param compte: Le compte mis en defaut, ou reclamant.
+    :param func: Quelle action l'utilisateur essayait a ce moment.
+    :param arg: La chaine qui aura fait l'erreur.
     """
 
     fichier = f"Rapports/{func}.txt"
