@@ -3,13 +3,13 @@
 Editeur: Mistayan
 Projet: Comptes-Bancaires
 """
-##########################################  IMPORTS  ###############################################
+# ############################  IMPORTS  #######################################
 from comptes import Compte
-from messages import static_strings as msg
-from vertifications import ErreurUtilisateurNonDefini
+import messages as msgs
+from verifications import ErreurUtilisateurNonDefini
 
 
-##########################################  Definition Classe  #####################################
+# ############################  Definition Classe  #############################
 #
 class CompteCourant(Compte):
     """
@@ -28,7 +28,7 @@ class CompteCourant(Compte):
     __coup_de_pouce: bool = True  # On autorise un retrait a decouvert par mois, sans frais. ;)
 
     #
-    ##########################################  __init__  ##########################################
+    # ############################  __init__  ##################################
     def __init__(self, autorisation: float = 50, agios: float = 4.73, **extra):
         if hasattr(extra, "nom"):
             nom = extra.get("nom")
@@ -46,15 +46,17 @@ class CompteCourant(Compte):
               f" {self._autorisation_decouvert}{self.monnaie}, "
               f"et un taux d'interets de {self._pourcentage_agios * 100}%")
 
-    ########################################## GETTERS  #################################
+    # ############################### GETTERS  #################################
     def get_agios(self):
+        """:return: le taux d'agios du compte (en %)"""
         return self._pourcentage_agios
 
     def get_autorisation(self):
+        """:return: l'autorisation de decouvert du compte"""
         return self._autorisation_decouvert
 
     #
-    ##########################################  Methodes Normale  #################################
+    # #########################  Methodes Normale  #############################
 
     def retrait(self, valeur: float, autorisation: float = 0) -> float:
         """
@@ -94,30 +96,20 @@ class CompteCourant(Compte):
         return self._solde
 
     #
-    ##########################################  Fonctions Magiques  ################################
+    # ########################  Fonctions Magiques  ############################
 
     def __str__(self) -> str:  # Surcharge
-        """
-        Permet de renvoyer les informations du compte au format str(json)
-        """
-        # Mais on appelle quand meme maman pour recuperer ses informations.
-        # infos_parent = super().__str__()
-        # infos_enfant = f"\"autorisation\":\"{self._autorisation_decouvert}\"," \
-        #                f"\"interets\":\"{self._pourcentage_agios}\"," \
-        #                f"\"pouce\":\"{self.__coup_de_pouce}\"" \
-        #                "}"
+        """Permet de renvoyer les informations du compte au format str(json)"""
         return str(self.__to_json__())
 
     def __to_json__(self) -> dict:
-        """
-        Permet de renvoyer les informations du compte au format json
-        """
+        """Permet de renvoyer les informations du compte au format json"""
         infos_compte = {
             "nom": self.nom_proprietaire,
             "type_compte": "Courant",
             "autorisation": self.get_autorisation(),
             "agios": self.get_agios(),
-            "solde": self.get_solde(),
+            "solde": round(self.get_solde(), 2),
             "num_compte": self.get_num(),
             "code": self._recuperer_code(),
             "monnaie": self.monnaie,
@@ -126,8 +118,8 @@ class CompteCourant(Compte):
         return infos_compte
 
 
-##########################################  Fonction test_module  ##################################
+# ########################  Fonction test_module  ##############################
 
 
 if __name__ == '__main__':
-    print(msg.EXECUTE)
+    print(msgs.EXECUTE)
