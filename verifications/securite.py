@@ -87,3 +87,6 @@ def verif_format(dict_compte):
 
     return False  # Les champs sont presents ET valides
 
+
+if __name__ == "__main__":
+    pass

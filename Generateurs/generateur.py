@@ -10,7 +10,7 @@ import secrets
 import re
 from datetime import datetime
 import messages.static_strings as Message
-import vertifications as Verif
+import verifications as Verif
 from comptes import CompteCourant, CompteEpargne
 
 

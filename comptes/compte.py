@@ -3,21 +3,18 @@
 Editeur: Mistayan
 Projet: Comptes-Bancaires
 """
-from _md5 import md5
-##########################################  IMPORTS  ###############################################
+# ##############################  IMPORTS  #####################################
+from logging import info, warning
 from abc import ABCMeta, abstractmethod
-from logging import info
+from _md5 import md5
+from pymongo import MongoClient
 
+import messages as msgs
 import Generateurs as Gen
-import vertifications as Securite
-from messages import static_strings as Msg
+import verifications as secu
 
 
-##########################################  Globales  ##############################################
-
-##########################################  Definition classe  #####################################
-
-
+# ##############################  Definition classe  ###########################
 class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abstractmethod
     """Un compte de base. Ne peut etre instancie. (ABC)\n
     Aucun argument n'est obligatoire
@@ -57,33 +54,33 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
 
     @abstractmethod  # NON, pas le droit d'appeler Compte seul ! CompteXxxxxx obligatoire
     def __init__(self, nom: str = None, num_compte: str = None,
-                 solde_initial: int = 0, code: str = '', extra_secu: bool = False,
-                 monnaie: str = "E", force=False, **extra):
+                 solde_initial: int = 0, code: str = '', **extra):
 
-        ################################### Initialisation des variables publiques #################
-        self.monnaie = monnaie
+        # ############### Initialisation des variables publiques ###############
+        self.monnaie = extra['monnaie'] if 'monnaie' in extra else 'E'
         self.nom_proprietaire = "Anonymous" if nom is None else nom
 
-        ################################### Initialisation des variables privees ###################
+        # ###############  Initialisation des variables privees  ###############
         self._solde = solde_initial if solde_initial >= 0 else 0
-
+        force = extra['force'] if 'force' in extra and extra['force'] is True else None
+        extra_secu = extra['extra_secu'] if 'extra_secu' in extra else None
         while self._numero_compte is None:
-            if not force:  # Force n'est utile que pour l'init de l'application.
-                valeur_verif = Securite.dispo(num_compte)
+            if not force:  # fonctionnement standard, hors init application.()
+                valeur_verif = secu.dispo(num_compte)
                 if valeur_verif is False or isinstance(valeur_verif, str):
-                    num_compte = Gen.chaine_aleatoire(longueur=10, style=Msg.digits())
+                    num_compte = Gen.chaine_aleatoire(longueur=10, style=msgs.digits())
                 elif valeur_verif is True:  # fonctionnement standard, hors init application.
                     self._numero_compte = num_compte
-            else:  # fonctionnement standard, hors init application.()
+            else:  # Force n'est utile que pour l'init de l'application.
                 self._numero_compte = num_compte
 
-        ################################### Initialisation des variables protegees #################
+        # ############### Initialisation des variables protegees ###############
         if not force:
             if extra_secu:
                 self.__code = code if code != '' else \
-                    Gen.chaine_aleatoire(longueur=6, style=Msg.hexa())
+                    Gen.chaine_aleatoire(longueur=6, style=msgs.hexa())
             else:
-                self.__code = Gen.chaine_aleatoire(longueur=4, style=Msg.digits())
+                self.__code = Gen.chaine_aleatoire(longueur=4, style=msgs.digits())
         else:
             self.__code = code
         message_nouveau_compte = f"Le compte pour {self.nom_proprietaire}," \
@@ -96,26 +93,25 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
             print(message_nouveau_compte)
             self.__code = Gen.Encrypt(self.__code).__str__()
 
-    ##########################################  Fonctions Privées  #################################
+    # ##########################  Fonctions Privées  ###########################
     def __demander_code(self):
-        code = input(Msg.ASK_CODE)
+        code = input(msgs.ASK_CODE)
         if md5(str(code).encode("utf-8")).hexdigest() == self.__code:
             return True  # Code OK
         Gen.fraude(self._numero_compte, "code_invalide", code)
-        info("Code Faux !")
         return False
 
-    ##########################################  Fonctions Partagées  ###############################
+    # #########################  Fonctions Partagées  ##########################
 
     def retrait(self, valeur: float, autorisation: float = 0) -> float:
         """
         Permet le retrait d'une somme demandée
-            Si une valeur non positive est rentree (tentative de fraude),
+        Si une valeur non positive est rentree (tentative de fraude),
              l'operation est enregistree dans les fraudes
 
-            Si l'utilisateur ne donne pas le bon code.... Pas de sous !
+        Si l'utilisateur ne donne pas le bon code.... Pas de sous !
 
-            Si le solde est insuffisant, l'operation est refusee, avec un message d'erreur ;
+        Si le solde est insuffisant, l'operation est refusee, avec un message d'erreur ;
             Exception faite : Si un compte courant a une autorisation adaptee.
         """
 
@@ -124,22 +120,23 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
                 valeur = float(valeur)
             except ValueError:
                 Gen.fraude(compte=self._numero_compte, func="retrait", arg=valeur)
-                print(Msg.ERREUR_NOMBRES)
+                print(msgs.ERREUR_NOMBRES)
             finally:
                 if not isinstance(valeur, (int, float)):
-                    print(Msg.ERREUR_NOMBRES)
+                    print(msgs.ERREUR_NOMBRES)
                     return self._solde
+
+        valeur = round(abs(valeur), 2)  # esquiver
 
         # En mode NO_CODE, on ne demandera pas le code,
         # Pratique pour le debug.... Ou autre.
-        if Msg.NO_CODE or self.__demander_code() is True:
+        if msgs.NO_CODE or self.__demander_code() is True:
             if self._solde + autorisation < valeur:
                 return self._solde
             self._solde -= valeur
-            # print(f"Un retrait de {valeur}{self.monnaie} a ete effectue")
-
+            print(f"Un retrait de {valeur}{self.monnaie} a ete effectue")
             Gen.historique(self._numero_compte, "retrait", valeur)
-        # self.afficher_solde()
+
         return self._solde
 
     def versement(self, valeur: float) -> float:
@@ -151,15 +148,15 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
             try:
                 valeur = float(valeur)
             except ValueError:
-                Gen.fraude(compte=self._numero_compte, func="retrait", arg=valeur)
-                raise ValueError(Msg.ERREUR_NOMBRES)
+                Gen.fraude(compte=self._numero_compte, func="versement", arg=valeur)
+                return self._solde
         if not isinstance(valeur, (int, float)):
-            raise ValueError(Msg.ERREUR_NOMBRES)
+            raise ValueError(msgs.ERREUR_NOMBRES)
 
-        valeur = abs(valeur)  # esquiver
+        valeur = round(abs(valeur), 2)  # esquiver
 
         self._solde += valeur
-        # info(f"Un depot de {valeur}{self.monnaie} a ete effectue")
+        print(f"Un depot de {valeur}{self.monnaie} a ete effectue")
         Gen.historique(self._numero_compte, "versement", valeur)
 
         # self.afficher_solde()
@@ -169,7 +166,7 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         """Affiche le solde actuel"""
         print(f"Votre solde: {self._solde:.2f} {self.monnaie}")
 
-    ##########################################  GETTERS  ###########################################
+    # ############################  GETTERS  ###################################
     def get_solde(self):
         """ Retourne le solde du compte. """
         return self._solde
@@ -178,38 +175,39 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         """ Retourne le numero du compte. """
         return self._numero_compte
 
-    ##########################################  Fonctions Spéciales  ###############################
-    def connect(self, num, code, db=False) -> bool:
+    # ############################  Fonctions Spéciales  #######################
+    def connect(self, num, code, with_db=False) -> bool:
         """
         Permet de se connecter sur un compte deja existant,
-         a condition que les arguments fournis soient valides
+         a condition que les informations fournies soient valides
         """
-        if db:
-            return self.connect_db(num, code)
-        return True if self.__code == code and self._numero_compte == num else False
+
+        return self.connect_db(num, code) if with_db else \
+            True if self.__code == code and self._numero_compte == num \
+            else False
 
     def connect_db(self, num, code):
+        """ Se connecter au compte 'en ligne'"""
         mycollection = self.__connect_db()
         if mycollection:
             cursor = mycollection.find_one({"num_compte": self.get_num()})
             cur_dict = dict(cursor)
-            return True if cur_dict["code"] == code and cur_dict["num_compte"] == num else False
+            return True \
+                if cur_dict["code"] == code and cur_dict["num_compte"] == num\
+                else False
         return False
 
-    def _recuperer_code(self) -> None:
-        """ Permet de recuperer un code oublie
-        """
-        # print(self.__code)  # Aller, on est gentil... OU PAS ! ;)
+    def _recuperer_code(self) -> str:
+        """ Permet de recuperer un code oublie"""
         return self.__code
 
     def __connect_db(self):
-        from pymongo import MongoClient
         client = MongoClient('localhost', 27017)
         return client.comptes.comptes
 
-    ##########################################  Fonctions Magiques  ################################
+    # ############################  Fonctions Magiques  ########################
 
-    ##########################################  OPERATIONS  ########################################
+    # ############################  OPERATIONS  ################################
 
     def __add__(self, num):
         """ Permet un versement via '+'  avec un nombre (int ou float)."""
@@ -219,12 +217,12 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         """ Permet le retrait via '-'  avec un nombre (int ou float)."""
         return self.retrait(num)
 
-    ##########################################  CASTINGS  ##########################################
+    # ############################  CASTINGS  ##################################
     def __str__(self):
         """Retourne le nom du proprietaire"""
         return self.nom_proprietaire
 
 
-##########################################  Fonction test_module  ##################################
+# ############################  Fonction test_module  ##########################
 if __name__ == '__main__':
-    print(Msg.EXECUTE)
+    print(msgs.EXECUTE)
