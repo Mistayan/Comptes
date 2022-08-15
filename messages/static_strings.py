@@ -3,8 +3,8 @@
 Editeur: Mistayan
 Projet: Comptes-Bancaires
 """
-from string import digits as DIGITS
-from string import hexdigits as HEXADECIMAL
+from string import digits as string_digits
+from string import hexdigits as hexadecimal
 
 DEBUG = False
 NO_CODE = True  # vérification une fois connecté, à chaque action utilisateur ?
@@ -61,10 +61,11 @@ MENU_GESTION = [
     "5: informations du compte", "6: Deconnexion"
 ]
 
+
 # Alias
-def hexa():
-    return HEXADECIMAL
-
-
 def digits():
-    return DIGITS
+    return string_digits
+
+
+def hexa():
+    return hexadecimal
