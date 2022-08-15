@@ -44,7 +44,7 @@ class CompteCourant(Compte):
 
         print(f"Ce compte est de type CompteCourant, avec autorisation de decouvert de"
               f" {self._autorisation_decouvert}{self.monnaie}, "
-              f"et un taux d'interets de {self._pourcentage_agios * 100}%")
+              f"et un taux d'agios de {self._pourcentage_agios * 100}%")
 
     # ############################### GETTERS  #################################
     def get_agios(self):
@@ -68,8 +68,7 @@ class CompteCourant(Compte):
         if not valeur:
             return self.get_solde()
         super().retrait(valeur, self.get_autorisation())
-        self.appliquer_agios()
-        return self.get_solde()
+        return self.appliquer_agios()
 
     def appliquer_agios(self):
         """
@@ -78,26 +77,25 @@ class CompteCourant(Compte):
          de retrait suffisantes
         On lui evitera cependant les frais de retraits lors du premier evenement qui l'aura
          mis en negatif (une seule fois)
-        Attention ! Hors 'coup de pouce', CHAQUE operation a-decouvert appliquera des frais.
+        Attention ! Hors 'coup de pouce', CHAQUE operation a decouvert appliquera des frais.
         """
         solde = self.get_solde()
         if solde >= 0:
-            pass  # Rien a faire si rien a retirer.
+            pass  # Rien a faire si en positif.
         elif solde < 0 and self.__coup_de_pouce is True:
             # En negatif et pas encore utilise le coup de pouce ?
             self.__coup_de_pouce = False
         else:
             # Nous avons donc un depensier .... Il va payer !
             facturation = abs(solde * self.get_agios())
-            print(f"Votre compte est debite de {facturation} {self.monnaie},"
+            print(f"Votre compte est debite de {facturation:{.2}} {self.monnaie},"
                   f" dans le cadre de notre politique de retraits.")
-            self._solde = solde - facturation
+            self._solde -= facturation
             # self.afficher_solde()
         return self._solde
 
     #
     # ########################  Fonctions Magiques  ############################
-
     def __str__(self) -> str:  # Surcharge
         """Permet de renvoyer les informations du compte au format str(json)"""
         return str(self.__to_json__())

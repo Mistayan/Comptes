@@ -9,12 +9,14 @@ import os
 import secrets
 import re
 from datetime import datetime
+from logging import error
+
 import messages.static_strings as Message
 import verifications as Verif
 from comptes import CompteCourant, CompteEpargne
 
 
-##########################################  SNIPPETS  ##############################################
+# ###########################  FONCTIONS UTILES  ###############################
 def chaine_aleatoire(longueur: int, style: str) -> str:
     """
         Genere une chaine de longueur voulue, contenant les characters de style voulu, selectionnes
@@ -26,17 +28,6 @@ def chaine_aleatoire(longueur: int, style: str) -> str:
          HEXA = DIGITS + "ABCDEF"
          ... et bien d'autres ... (Vous pouvez aussi rentrer une chaine de characters personnalise)
     """
-    """
-        # Fonction wrapped (et donc privee ?), utilisable uniquement au sein de cette fonction.
-        def _choix_aleatoire():
-            for _ in range(longueur):  # _ veut dire 'pas important'
-                # Yield est un return a memoire. Retourne un generateur iterable.
-                yield secrets.choice(style)
-            # ^^^^^^^^ Au prochain appel de la fonction, reprendra ici.
-
-        ret = ''.join(elem for elem in _choix_aleatoire())
-        return ret
-        """
     return ''.join(secrets.choice(style) for _ in range(longueur))
 
 
@@ -97,15 +88,22 @@ def json_en_compte(json: dict) -> any:
     """
     if Verif.verif_format(json) is False:  # Double check
         return None
-    if json["type_compte"] == "Epargne":
-        return CompteEpargne(nom=json["nom"], interets=json["interets"],
-                             solde_initial=json["solde"], num_compte=json["num_compte"],
-                             code=json["code"], monnaie=json["monnaie"], force=True)
-    if json["type_compte"] == "Courant":
-        return CompteCourant(nom=json["nom"], autorisation=json["autorisation"],
-                             agios=json["agios"], solde_initial=json["solde"],
-                             num_compte=json["num_compte"], code=json["code"],
-                             monnaie=json["monnaie"], force=True)
+    try:
+        match json["type_compte"]:
+            case "Epargne":
+                return CompteEpargne(nom=json["nom"], interets=json["interets"],
+                                     solde_initial=json["solde"], num_compte=json["num_compte"],
+                                     code=json["code"], monnaie=json["monnaie"],
+                                     force=True, new=False)
+            case "Courant":
+                return CompteCourant(nom=json["nom"], autorisation=json["autorisation"],
+                                     agios=json["agios"], solde_initial=json["solde"],
+                                     num_compte=json["num_compte"], code=json["code"],
+                                     monnaie=json["monnaie"], force=True, new=False)
+            case _:
+                return None
+    except KeyError as err:
+        print(f"{json}: Aucun type de compte défini")
     return None
 
 
@@ -113,7 +111,7 @@ def compte_en_json(compte: CompteEpargne | CompteCourant):
     return compte.__to_json__()
 
 
-##########################################  Fonction test_module  ##################################
+# ########################  Fonction test_module  ##############################
 if __name__ == '__main__':
     import pprint
 
