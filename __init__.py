@@ -1,5 +1,4 @@
 #!-- coding:utf-8 --!#
-from logging import debug, info, warning
 
 from .messages import *
 from .comptes import Compte, CompteCourant, CompteEpargne

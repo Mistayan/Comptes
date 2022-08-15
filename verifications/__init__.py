@@ -5,4 +5,4 @@ Editeur: Mistayan
 Projet: Comptes-Bancaires
 """
 from .ErrorsHandling import ErreurUtilisateurNonDefini, ErreurSolde
-from .securite import dispo, scan_file, verif_format
+from .securite import dispo, scan_file, format_compte
