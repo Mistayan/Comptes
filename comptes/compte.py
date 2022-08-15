@@ -4,7 +4,6 @@ Editeur: Mistayan
 Projet: Comptes-Bancaires
 """
 # ##############################  IMPORTS  #####################################
-from logging import info, warning
 from abc import ABCMeta, abstractmethod
 from _md5 import md5
 from pymongo import MongoClient

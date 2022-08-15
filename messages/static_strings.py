@@ -56,9 +56,9 @@ ACTIONS_MENU_PRINCIPAL = "Veuillez choisir l'action que vous voulez effectuer :\
                     "2: Creer un compte.\n" \
                     "3: Quitter l'interface."
 MENU_GESTION = [
-    "1: Afficher le solde du compte.", "2: Retirer de l'argent.",
+    "1: informations du compte.", "2: Retirer de l'argent.",
     "3: Deposer de l'argent.", "4: Faire une reclamation.",
-    "5: informations du compte", "6: Deconnexion"
+    "5: Deconnexion"
 ]
 
 
