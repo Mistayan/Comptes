@@ -43,7 +43,7 @@ def scan_file(numero_en_str: str = None):
     return False  # Unique
 
 
-def verif_format(dict_compte: dict) -> bool:
+def format_compte(dict_compte: dict) -> bool:
     """
     Verifie l'integrite du compte recupere dans un fichier techniquement accessible a l'utilisateur
 
