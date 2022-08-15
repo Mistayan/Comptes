@@ -56,14 +56,18 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
     def __init__(self, nom: str = None, num_compte: str = None,
                  solde_initial: int = 0, code: str = '', **extra):
 
+        # ############### Initialisation des variables **extra #################
+        force = extra['force'] if 'force' in extra and extra['force'] is True else None
+        extra_secu = extra['extra_secu'] if 'extra_secu' in extra else None
+        new = extra['new'] if 'new' in extra else None
+
         # ############### Initialisation des variables publiques ###############
         self.monnaie = extra['monnaie'] if 'monnaie' in extra else 'E'
         self.nom_proprietaire = "Anonymous" if nom is None else nom
 
         # ###############  Initialisation des variables privees  ###############
         self._solde = solde_initial if solde_initial >= 0 else 0
-        force = extra['force'] if 'force' in extra and extra['force'] is True else None
-        extra_secu = extra['extra_secu'] if 'extra_secu' in extra else None
+
         while self._numero_compte is None:
             if not force:  # fonctionnement standard, hors init application.()
                 valeur_verif = secu.dispo(num_compte)
@@ -83,15 +87,18 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
                 self.__code = Gen.chaine_aleatoire(longueur=4, style=msgs.digits())
         else:
             self.__code = code
-        message_nouveau_compte = f"Le compte pour {self.nom_proprietaire}," \
-                                 f" avec le n° de compte: {self._numero_compte}," \
-                                 f"et le code secret: {self.__code}.\n vient d'etre cree.\n" \
-                                 f"Nous vous conseillons TRES FORTEMENT de les noter !"
-
-        if 'new' in extra and extra['new'] is True:
+        if new is not None:
             # Ne doit etre vrai que lors de la creation d'un compte dans l'app
-            print(message_nouveau_compte)
-            self.__code = Gen.Encrypt(self.__code).__str__()
+            if new is True:
+                print(f"Le compte pour {self.nom_proprietaire},"
+                      f" avec le n° de compte: {self._numero_compte},"
+                      f" un solde initial de {self.get_solde():.2f}{self.monnaie}"
+                      f" et le code secret: {self.__code}, vient d'etre cree.\n"
+                      f"Nous vous conseillons TRES FORTEMENT de les noter !")
+                self.__code = Gen.Encrypt(self.__code).__str__()
+            elif new is False:
+                print(f"Un compte vient d'etre ajoute par le programme.\n"
+                      f"n°{self._numero_compte}, solde: {self.get_solde():.2f}{self.monnaie}")
 
     # ##########################  Fonctions Privées  ###########################
     def __demander_code(self):
@@ -159,7 +166,6 @@ class Compte(metaclass=ABCMeta):  # Instancier avec ABC, permet d'utiliser @abst
         print(f"Un depot de {valeur}{self.monnaie} a ete effectue")
         Gen.historique(self._numero_compte, "versement", valeur)
 
-        # self.afficher_solde()
         return self._solde
 
     def afficher_solde(self) -> None:
