@@ -3,16 +3,15 @@
 Editeur: Mistayan
 Projet: Comptes-Bancaires
 """
-##########################################  IMPORTS  ###############################################
+# ################################  IMPORTS  ###################################
 
 import os
 import secrets
 import re
 from datetime import datetime
-from logging import error
 
-import messages.static_strings as Message
-import verifications as Verif
+import messages.static_strings as msgs
+import verifications as secu
 from comptes import CompteCourant, CompteEpargne
 
 
@@ -38,44 +37,46 @@ def my_open(fichier: str, mode: str = 'r', encoding: str = "utf-8", rec: int = 0
     """
     if rec == 5:
         return None
-    if not re.search(r"[A-Z]:[\\]|[/]", fichier):  # Path relatif? Petit regex bien pratique.
+    if not re.search(r"[A-Z]:[\\/]", fichier):  # Path relatif? Petit regex bien pratique.
         dossier_actuel = os.path.abspath('.') + "\\"  # On ajoute le path complet.
     else:
         dossier_actuel = ""
     try:
         fp = open(f"{dossier_actuel}{fichier}", mode=mode, encoding=encoding)
         return fp if fp else None
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         fp = my_open(fichier, 'w', encoding, rec + 1)  # Du coup, on cree le fichier.
         fp.close()  # Pas le bon mode, on ferme.
     return my_open(fichier, mode, encoding, rec + 1)  # Verification recursive.
 
 
 def fraude(compte: str, func: str, arg: str = "") -> None:
-    """Enregistre dans le fichier approprie:
-    la fraude/tentative de retrait sans solde/... constatee
-    Cela fonctionne aussi pour les reclamations clients.
+    """Enregistre dans le fichier approprie :
+    la fraude/tentative de retrait sans solde/... constatee\n
+    Cela fonctionne aussi pour les reclamations clients.\n
+
     :param compte: Le compte mis en defaut, ou reclamant.
-    :param func: Quelle action l'utilisateur essayait a ce moment.
-    :param arg: La chaine qui aura fait l'erreur.
+    :param func: Nom du fichier d'enregistrement.
+    :param arg: La chaine qui aura fait l'erreur ou le message utilisateur.
     """
 
-    fichier = f"Rapports/{func}.txt"
+    fichier = f"Rapports/{func}.log"
     with my_open(fichier, "a+") as f:
         date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        print(f"{compte} ; {date} ===> {arg} <===", file=f)
+
+        print(f"{date} {compte} ===> {arg} <===", file=f)
         f.close()
-        if Message.DEBUG:
+        if msgs.DEBUG:
             print(f"tentative enregistree")
     return
 
 
 def historique(compte, methode: str, valeur) -> None:
-    with my_open(f"Historique/{compte}.txt", "a+") as f:
+    with my_open(f"Historique/{compte}.log", "a+") as f:
         date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         print(f"{date} /{methode}/ {valeur}", file=f)
         f.close()
-        if Message.DEBUG:
+        if msgs.DEBUG:
             print("Un evenement vient d'etre historise dans ", f"Historique/{compte}.txt")
     return
 
@@ -86,7 +87,7 @@ def json_en_compte(json: dict) -> any:
     :return : si le type de compte est valide, le compte,
      avec les informations contenues dans le dictionnaire, sinon None.
     """
-    if Verif.verif_format(json) is False:  # Double check
+    if secu.format_compte(json) is False:  # Double check
         return None
     try:
         match json["type_compte"]:
@@ -102,7 +103,7 @@ def json_en_compte(json: dict) -> any:
                                      monnaie=json["monnaie"], force=True, new=False)
             case _:
                 return None
-    except KeyError as err:
+    except KeyError:
         print(f"{json}: Aucun type de compte défini")
     return None
 
@@ -117,5 +118,5 @@ if __name__ == '__main__':
 
     pp = pprint.PrettyPrinter(width=42, compact=True)
     """Je vois pas comment controller l'aleatoire... ? part avec un bon vieux PRINT !"""
-    chaine = chaine_aleatoire(style=Message.BRAIN_FUCK, longueur=2500)
+    chaine = chaine_aleatoire(style=msgs.BRAIN_FUCK, longueur=2500)
     pp.pprint(chaine)
