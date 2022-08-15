@@ -3,89 +3,71 @@
 Editeur: Mistayan
 Projet: Comptes-Bancaires
 """
-##########################################  IMPORTS  ###############################################
+# ##################################  IMPORTS  #################################
 import Generateurs as Gen
 
 
-##########################################  Definition classe  #####################################
+# ###########################  Definition Fonctions  ###########################
 
 
-def dispo(compte: str = None, code: str = None, ):
+def dispo(num_compte: str = None):
     """
         Verifie la disponibilite d'un numero de compte (UID)
 
-         Si le numero n'est pas au format valide, retourne False
-
-         Si le compte est trouve, retourne le compte sous forme False
-
-             Si le compte n'existe pas, retourne True
+        Si le numero n'est pas au format valide, retourne False
+        Si le compte est trouve, retourne "num_cpt"
+        Si le compte n'existe pas, retourne True
     """
 
-    if not compte or not compte.isdigit() or not len(compte) == 10:
+    if not num_compte or not num_compte.isdigit() or not len(num_compte) == 10:
         return False
-    else:
-        f = Gen.my_open("comptes.json", 'r+')
-        if not f:
-            return False
-        for line in f:
-            if compte in line:
-                f.close()
-                return line.split(":")[1]  # Retourne le numero du compte.
-        f.close()
-    return True
+    return False if scan_file(num_compte) else True
 
 
 def scan_file(numero_en_str: str = None):
     """
-    :arg
-     Prend une chaine de caracteres;
-     Cherche la chaine de caracteres dans le fichier de comptes
+     Cherche la chaine de caracteres dans le fichier de comptes\n
 
-    :return
-     True si present
+    :arg numero_en_str:
+     Prend une chaine de caracteres NUMERIQUES
+
+    :return:
+     True si present;
      False si absent
     """
 
-    f = Gen.my_open("comptes.json", "r+")
-    for line in f.read():
-        if numero_en_str in line:
-            # print("duplicate found")
-            f.close()
-            return True
-    f.close()
-    return False
+    with Gen.my_open("comptes.json", "r+") as fp:
+        for line in fp.read():
+            if numero_en_str in line:
+                return True  # Duplicat
+    return False  # Unique
 
 
-def verif_format(dict_compte):
+def verif_format(dict_compte: dict) -> bool:
     """
-    arg: un dictionnaire de comptes
-    Verifie l'integrite du compte recupere dans un fichier techniquement accessible a l'utilisateur.
+    Verifie l'integrite du compte recupere dans un fichier techniquement accessible a l'utilisateur
 
-    Retourne un compte du type voulu si les donnees sont valides, sinon False.
+    :arg dict_compte: un dictionnaire généré par un compte
+    :return: True si les donnees sont valides, sinon False
     """
-    champs_compte = ["nom", "type_compte", "solde", "num_compte", "code", "monnaie"]
-    champs_compte_courant = ["autorisation", "agios"]
-    champs_compte_epargne = ["interets"]
-
-    if not type(dict_compte) is dict:
+    if not isinstance(dict_compte, dict):
         return False
-    for c in champs_compte:
-        if c not in dict_compte:
-            return False  # Un des champs n'existe pas.
 
-    if dict_compte["type_compte"] == "Epargne":
-        for c in champs_compte_epargne:
-            if c not in dict_compte:
-                return False  # Un des champs n'existe pas.
-        return True  # Les champs sont 'valides'
-
-    elif dict_compte["type_compte"] == "Courant":
-        for c in champs_compte_courant:
-            if c not in dict_compte:
-                return False  # Un des champs n'existe pas.
-        return True  # Les champs sont 'valides'
-
-    return False  # Les champs sont presents ET valides
+    champs_compte = ["nom", "type_compte", "solde", "num_compte", "code", "monnaie"]
+    try:
+        match dict_compte["type_compte"]:
+            case "Epargne":
+                champs_compte = champs_compte + ["interets"]
+            case "Courant":
+                champs_compte = champs_compte + ["autorisation", "agios", "pouce"]
+            case _:
+                return False
+        for champ in dict_compte:
+            if champ not in champs_compte:
+                return False
+    except KeyError:
+        return False
+    return True
 
 
 if __name__ == "__main__":
