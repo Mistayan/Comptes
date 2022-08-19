@@ -3,6 +3,7 @@ import Generateurs as Gen
 import messages
 from comptes import Compte, CompteCourant, CompteEpargne
 
+
 def sql_get_all():
     pass
 
@@ -19,9 +20,10 @@ def connect_mongo(item: str):
             return client.comptes[item]
     return None
 
+
 def sql_save(compte):
     print("sqlsave")
-    if not issubclass(Compte, compte):
+    if not issubclass(compte, (CompteEpargne, CompteCourant)):
         print("invalid data")
         return False
     print("data_ok")
@@ -30,6 +32,7 @@ def sql_save(compte):
     table = connect_mongo("comptes")
     index = table.insert(j_cpt)
     print(index)
+
 
 if __name__ == "__main__":
     cpt = CompteCourant(nom="Julie Bois", code=Gen.chaine_aleatoire(4, messages.DIGITS))
